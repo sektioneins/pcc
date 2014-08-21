@@ -192,6 +192,7 @@ function is_writable_or_chmodable($fn)
 	return false;
 }
 
+
 /*****************************************************************************/
 
 $helptext = array(
@@ -253,7 +254,9 @@ $helptext = array(
 );
 
 // php.ini checks
-foreach (ini_get_all(NULL, false) as $k => $v) {
+foreach (ini_get_all() as $k => $v) {
+	$v = $v["local_value"]; // for compatibility with PHP <5.3.0 ini_get_all() is not called with the second 'detail' parameter.
+
 	$meta = tdesc("php.ini / $k");
 	$result = NULL;
 	$reason = NULL;
@@ -516,7 +519,8 @@ foreach (ini_get_all(NULL, false) as $k => $v) {
 		break;
 	case 'suhosin.cookie.cryptkey':
 	case 'suhosin.session.cryptkey':
-		if (ini_get('suhosin.'. explode('.', $k)[1] . '.encrypt')) {
+		$tmp = explode('.', $k);
+		if (ini_get('suhosin.'. $tmp[1] . '.encrypt')) {
 			if ($v === "") {
 				list($result, $reason) = array(TEST_HIGH, "encryption used, but key not set.");
 				$recommendation = $helptext['suhosin.*.cryptkey'];
@@ -652,6 +656,9 @@ foreach (ini_get_all(NULL, false) as $k => $v) {
 // --- other checks ---
 
 // old version of this script?
+if (version_compare(PHP_VERSION, '5.1.0') >= 0) {
+	date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
+}
 if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
 	if (time() > strtotime($pcc_date) + (24*3600*60)) { $cfg['need_update'] = 1; }
 } elseif (time() > strtotime($pcc_date) + (24*3600*180)) { $cfg['need_update'] = 1; }
@@ -659,7 +666,7 @@ if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== 
 
 // old php version?
 $meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.4");
-if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 4) {
+if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
 	tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
 } else {
 	tres($meta, TEST_HIGH, "PHP version is older than 5.4",
