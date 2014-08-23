@@ -37,12 +37,19 @@
     
 */
 
+// uncomment to disable IP restrictions by default
+// putenv("PCC_ALLOW_IP=*");
+
+// uncomment to disable mtime check by default
+// putenv("PCC_DISABLE_MTIME=1");
+
+/*****************************************************************************/
+
 $pcc_name = "PHP Configuration Security Checker";
 $pcc_version = "0.1-dev";
 $pcc_copy = "(c) 2014 SektionEins GmbH / Ben Fuhrmannek";
 $pcc_date = "2014-08-15"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
-
 
 /*****************************************************************************/
 
