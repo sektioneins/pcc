@@ -550,8 +550,10 @@ foreach (ini_get_all() as $k => $v) {
 	case 'suhosin.get.disallow_nul':
 	case 'suhosin.post.disallow_nul':
 	case 'suhosin.request.disallow_nul':
-		list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
-		$recommendation = $helptext['suhosin.*.disallow_nul'];
+		if ($v != "1") {
+			list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
+			$recommendation = $helptext['suhosin.*.disallow_nul'];
+		}
 		break;
 	case 'suhosin.get.disallow_ws':
 	case 'suhosin.post.disallow_ws':
