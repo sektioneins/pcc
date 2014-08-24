@@ -241,6 +241,11 @@ $helptext = array(
 	'cli.prompt' => "An overlong CLI prompt may indicate incorrect configuration. Please check manually.",
 	'curl.cainfo' => "Incorrect configuration of this option may prevent cURL from validating a certificate.",
 	'docref_*' => "This setting may reveal internal ressources, e.g. internal server names. Setting docref_root or docref_ext implies HTML output of error messages, which is bad practice for live environments and may reveal useful information to an attacker as well.",
+	'default_charset=empty' => "Not setting the default charset can make your application vulnerable to injection attacks based on incorrect interpretation of your data's character encoding. If unsure, set this to 'UTF-8'. HTML output should should contain the same value, e.g. <meta charset=\"utf-8\"/>. Also, your webserver can be configured accordingly, e.g. 'AddDefaultCharset UTF-8' for Apache2.",
+	'default_charset=typo' => "Change this to 'UTF-8' immediately.",
+	'default_charset=iso-8859' => "There is nothing wrong with ISO8859 charsets. However, the hipster way to deliver content tries not to discriminate and allows multibyte characters, e.g. Klingon unicode characters, too. Some browsers may even be so bold as to use a multibyte encoding anyway, regardless of this setting.",
+	'default_charset=custom' => "A custom charset is perfectly fine as long as your entire chain of character encoding knows about this. E.g. the application, database connections, PHP, the webserver, ... all have the same encoding or know how to convert appropriately.",
+	'default_mimetype' => "Please set a default mime type, e.g. 'text/html' or 'text/plain'. The mime type should always reflect the actual content. But it is a good idea to define a fallback here anyway. An incorrectly stated mime type can lead to injection attacks, e.g. using 'text/html' with JSON data may lead to XSS.",
 	
 	/* Suhosin */
 	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -492,12 +497,32 @@ foreach (ini_get_all() as $k => $v) {
 		break;
 	case 'docref_root':
 	case 'docref_ext':
-	if ($v !== NULL && $v !== "") {
-		list($result, $reason) = array(TEST_LOW, "docref is set.");
-		$recommendation = $helptext['docref_*'];
-	}
-	break;
-		
+		if ($v !== NULL && $v !== "") {
+			list($result, $reason) = array(TEST_LOW, "docref is set.");
+			$recommendation = $helptext['docref_*'];
+		}
+		break;
+	case 'default_charset':
+		if ($v == "") {
+			list($result, $reason) = array(TEST_HIGH, "default charset not explicitly set.");
+			$recommendation = $helptext['default_charset=empty'];
+		} elseif (strtolower($v) == "utf8") {
+			list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
+			$recommendation = $helptext['default_charset=typo'];
+		} elseif (stripos($v, "iso-8859") === 0) {
+			list($result, $reason) = array(TEST_MAYBE, "charset without multibyte support.");
+			$recommendation = $helptext['default_charset=iso-8859'];
+		} else {
+			list($result, $reason) = array(TEST_COMMENT, "custom charset.");
+			$recommendation = $helptext['default_charset=custom'];
+		}
+		break;
+	case 'default_mimetype':
+		if ($v == "") {
+			list($result, $reason) = array(TEST_HIGH, "default mimetype not set.");
+		}
+		break;
+	
 	/* ===== Suhosin ===== */
 	case 'suhosin.simulation':
 		if ($v == "1") {
