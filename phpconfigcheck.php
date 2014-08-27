@@ -733,10 +733,13 @@ elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT
 else {
 	$error_log_realpath = realpath(ini_get('error_log'));
 	$document_root_realpath = realpath($_SERVER['DOCUMENT_ROOT']);
+	if ($error_log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
+		$error_log_realpath = realpath(dirname(ini_get('error_log')));
+	}
 	if ($error_log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "error_log invalid or relative path."); }
 	elseif ($document_root_realpath === FALSE) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT invalid or relative path."); }
-	elseif (strpos($error_log_realpath, $document_root_realpath) === 0) {
-		tres($meta, TEST_HIGH, "error_log in DOCUMENT_ROOT.", "The error logfile is located inside the document root directory and may be accessible publicly. The error_log should point to a file outside the document root.");
+	elseif (strncmp($error_log_realpath . DIRECTORY_SEPARATOR, $document_root_realpath . DIRECTORY_SEPARATOR, $document_root_realpath +1) === 0) {
+		tres($meta, TEST_HIGH, "error_log in DOCUMENT_ROOT.", "The error logfile is located inside the document root directory and may be accessible publicly. The error_log should always point to a file outside the document root.");
 	} else { tres($meta, TEST_OK, "error_log outside of DOCUMENT_ROOT."); }
 }
 
