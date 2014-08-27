@@ -145,6 +145,8 @@ if (php_sapi_name() == "cli") {
 // detect OS
 $cfg['is_win'] = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
+// detect CGI
+$cfg['is_cgi'] = (substr(php_sapi_name(), 0, 3) === 'cgi');
 
 /*****************************************************************************/
 
@@ -216,7 +218,8 @@ $helptext = array(
 	'max_input_time' => "It may be useful to limit the time a script is allowed to parse input. This should be decided on a per application basis.",
 	'max_input_nesting_level' => "Deep input nesting is only required in rare cases and may trigger unexpected ressource limits.",
 	'memory_limit' => "A high memory limit may easy lead lead to ressource exhaustion and thus make your application vulnerable to denial-of-service attacks. This value should be set approximately 20% above empirically gathered maximum memory requirement.",
-	'post_max_size' => "This value should match the size actually required. File uploads have to be covered by this setting as well.",
+	'post_max_size' => "Setting the maximum allowed POST size to a high value may lead to denial-of-service from memory exhaustion. If your application does not need huge file uploads, consider setting this option to a lower value. Note: File uploads have to be covered by this setting as well.",
+	'post_max_size>memory_limit' => "post_max_size must be lower than memory_limit. Otherwise, a simple POST request will let PHP reach the configured memory limit and stop execution. Apart from denial-of-service an attacker may try to split a transaction, e.g. let PHP execute only a part of a program.",
 	'upload_max_filesize' => "This value should match the file size actually required.",
 	'allow_url_fopen' => "Deactivate, if possible. Allowing URLs in fopen() can be a suprising side-effect for unexperienced developers. Even if deactivated, it is still possible to receive content from URLs, e.g. with curl.",
 	'allow_url_include' => "This flag should remain deactivated for security reasons.",
@@ -250,8 +253,12 @@ $helptext = array(
 	'default_charset=empty' => "Not setting the default charset can make your application vulnerable to injection attacks based on incorrect interpretation of your data's character encoding. If unsure, set this to 'UTF-8'. HTML output should should contain the same value, e.g. <meta charset=\"utf-8\"/>. Also, your webserver can be configured accordingly, e.g. 'AddDefaultCharset UTF-8' for Apache2.",
 	'default_charset=typo' => "Change this to 'UTF-8' immediately.",
 	'default_charset=iso-8859' => "There is nothing wrong with ISO8859 charsets. However, the hipster way to deliver content tries not to discriminate and allows multibyte characters, e.g. Klingon unicode characters, too. Some browsers may even be so bold as to use a multibyte encoding anyway, regardless of this setting.",
-	'default_charset=custom' => "A custom charset is perfectly fine as long as your entire chain of character encoding knows about this. E.g. the application, database connections, PHP, the webserver, ... all have the same encoding or know how to convert appropriately.",
+	'default_charset=custom' => "A custom charset is perfectly fine as long as your entire chain of character encoding knows about this. E.g. the application, database connections, PHP, the webserver, ... all have the same encoding or know how to convert appropriately. In particular calls to escaping functions such as htmlentities() and htmlspecialchars() must be called with the correct encoding.",
 	'default_mimetype' => "Please set a default mime type, e.g. 'text/html' or 'text/plain'. The mime type should always reflect the actual content. But it is a good idea to define a fallback here anyway. An incorrectly stated mime type can lead to injection attacks, e.g. using 'text/html' with JSON data may lead to XSS.",
+	'default_socket_timeout' => "By delaying the process to establish a socket connection, an attacker may be able to do a denial-of-service (DoS) attack. Please set this value to a reasonably small value for your environment, e.g. 10.",
+	'doc_root=empty' => "The PHP documentation strongly recommends to set this value when using CGI and cgi.force_redirect is off.",
+	'error_append_string' => "PHP adds additional output to error messages. If planted by an attacker, this string may contain script content and lead to XSS. Please check.",
+	'error_reporting' => "PHP error reporting can provide useful information about misconfiguration and programming errors, as well as possible attacks. Please consider setting this value.",
 	
 	/* Suhosin */
 	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -323,15 +330,25 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'memory_limit':
-		if (ini_atol($v) >= 128*1024*1024) { // default value
+		$v = ini_atol($v);
+		if ($v < 0) {
+			list($result, $reason) = array(TEST_HIGH, "Memory limit deactivated.");
+		} elseif (ini_atol($v) >= 128*1024*1024) { // default value
 			list($result, $reason) = array(TEST_MAYBE, "Memory limit is 128M or more.");
 		}
 		break;
 	case 'post_max_size':
-		if ($v === "8M") {
-			list($result, $reason) = array(TEST_COMMENT, "default value.");
-		} elseif (ini_atol($v) >= ini_atol("2G")) {
-			list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
+		$tmp = ini_atol(ini_get('memory_limit'));
+		$v = ini_atol($v);
+		if ($tmp < 0) {
+			if ($v >= ini_atol('2G')) {
+				list($result, $reason) = array(TEST_MAYBE, "post_max_size is >= 2G.");
+			}
+			break;
+		}
+		if ($v > $tmp) {
+			list($result, $reason) = array(TEST_HIGH, "post_max_size is greater than memory_limit.");
+			$recommendation = $helptext['post_max_size>memory_limit'];
 		}
 		break;
 	case 'upload_max_filesize':
@@ -528,6 +545,37 @@ foreach (ini_get_all() as $k => $v) {
 			list($result, $reason) = array(TEST_HIGH, "default mimetype not set.");
 		}
 		break;
+	case 'default_socket_timeout':
+		if (intval ($v) > 60) {
+			list($result, $reason) = array(TEST_LOW, "default socket timeout rather big.");
+		}
+		break;
+	case 'doc_root':
+		if (!$cfg['is_cgi']) {
+			list($result, $reason) = array(TEST_SKIPPED, "no CGI environment.");
+			break;
+		}
+		if (ini_get('cgi.force_redirect')) {
+			list($result, $reason) = array(TEST_SKIPPED, "cgi.force_redirect is on instead.");
+			break;
+		}
+		if ($v == "") {
+			list($result, $reason) = array(TEST_MEDIUM, "doc_root not set.");
+			$recommendation = $helptext['doc_root=empty'];
+		}
+		break;
+	case 'error_prepend_string':
+	case 'error_append_string':
+		if ($v !== NULL && $v !== "") {
+			list($result, $reason) = array(TEST_MAYBE, "$k is set.");
+			$recommendation = $helptext['error_append_string'];
+		}
+		break;
+	case 'error_reporting':
+		if ($v === NULL || $v == 0) {
+			list($result, $reason) = array(TEST_LOW, "error reporting is off.");
+		}
+		break;
 	
 	/* ===== Suhosin ===== */
 	case 'suhosin.simulation':
@@ -665,6 +713,8 @@ foreach (ini_get_all() as $k => $v) {
 	case 'date.sunset_zenith':
 	case 'date.timezone':
 	case 'dba.default_handler':
+	case 'enable_post_data_reading':
+	case 'engine': // can only be 1 here anyway.
 	case 'suhosin.apc_bug_workaround':
 	case 'suhosin.cookie.checkraddr':
 	case 'suhosin.cookie.cryptdocroot':
@@ -688,6 +738,8 @@ foreach (ini_get_all() as $k => $v) {
 	
 	if ($result === NULL) {
 		tres($meta, TEST_OK);
+	} elseif ($result === TEST_SKIPPED) {
+		tres($meta, $result, $reason);
 	} else {
 		tres($meta, $result, $reason, $recommendation);
 	}
