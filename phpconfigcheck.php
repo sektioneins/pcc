@@ -37,11 +37,17 @@
     
 */
 
-// uncomment to disable IP restrictions by default
-// putenv("PCC_ALLOW_IP=*");
+/*****************************************************************************/
+/* *** *** *** DANGER ZONE!! *** *** *** */
 
-// uncomment to disable mtime check by default
-// putenv("PCC_DISABLE_MTIME=1");
+// uncomment to disable IP restrictions by default
+// WARNING: better keep access restricted, e.g. set PCC_ALLOW_IP=10.0.0.*
+//putenv("PCC_ALLOW_IP=*");
+
+// This script will deactivate after 48 hours automatically.
+// To disable this feature, uncomment the line below.
+// WARNING: better keep this commented out unless further restrictions apply, e.g. IP check
+//putenv("PCC_DISABLE_MTIME=1");
 
 /*****************************************************************************/
 
