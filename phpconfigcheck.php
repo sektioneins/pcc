@@ -589,7 +589,7 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'suhosin.log.phpscript':
-		if ($v !== NULL || $v != "0") {
+		if ($v !== NULL && $v != "0") {
 			list($result, $reason) = array(TEST_COMMENT, "PHP-script for logging.");
 		}
 		break;
