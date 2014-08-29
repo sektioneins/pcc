@@ -370,9 +370,19 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'magic_quotes_gpc':
+		if (get_magic_quotes_gpc()) {
+			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+			$recommendation = $helptext['magic_quotes'];
+		}
+		break;
 	case 'magic_quotes_runtime':
+		if (get_magic_quotes_runtime()) {
+			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+			$recommendation = $helptext['magic_quotes'];
+		}
+		break;
 	case 'magic_quotes_sybase':
-		if ($v == "1") {
+		if ($v != "0") {
 			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
 			$recommendation = $helptext['magic_quotes'];
 		}
