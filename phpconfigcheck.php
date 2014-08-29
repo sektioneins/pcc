@@ -51,7 +51,7 @@
 
 /*****************************************************************************/
 
-$pcc_name = "PHP Configuration Security Checker";
+$pcc_name = "PHP Secure Configuration Checker";
 $pcc_version = "0.1-dev";
 $pcc_copy = "(c) 2014 SektionEins GmbH / Ben Fuhrmannek";
 $pcc_date = "2014-08-15"; // release date for update check
