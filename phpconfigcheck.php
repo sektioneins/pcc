@@ -194,6 +194,7 @@ function ini_list($val)
 
 function is_writable_or_chmodable($fn)
 {
+	if (!extension_loaded("posix")) { return is_writable($fn); }
 	$stat = stat($fn);
 	if (!$stat) { return false; }
 	$myuid = posix_getuid();
