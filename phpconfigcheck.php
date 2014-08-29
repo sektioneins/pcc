@@ -540,12 +540,14 @@ foreach (ini_get_all() as $k => $v) {
 		if ($v == "") {
 			list($result, $reason) = array(TEST_HIGH, "default charset not explicitly set.");
 			$recommendation = $helptext['default_charset=empty'];
-		} elseif (strtolower($v) == "utf8") {
-			list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
-			$recommendation = $helptext['default_charset=typo'];
 		} elseif (stripos($v, "iso-8859") === 0) {
 			list($result, $reason) = array(TEST_MAYBE, "charset without multibyte support.");
 			$recommendation = $helptext['default_charset=iso-8859'];
+		} elseif (strtolower($v) == "utf8") {
+			list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
+			$recommendation = $helptext['default_charset=typo'];
+		} elseif (strtolower($v) == "utf-8") {
+			// ok.
 		} else {
 			list($result, $reason) = array(TEST_COMMENT, "custom charset.");
 			$recommendation = $helptext['default_charset=custom'];
