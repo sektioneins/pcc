@@ -260,6 +260,11 @@ $helptext = array(
 	'doc_root=empty' => "The PHP documentation strongly recommends to set this value when using CGI and cgi.force_redirect is off.",
 	'error_append_string' => "PHP adds additional output to error messages. If planted by an attacker, this string may contain script content and lead to XSS. Please check.",
 	'error_reporting' => "PHP error reporting can provide useful information about misconfiguration and programming errors, as well as possible attacks. Please consider setting this value.",
+	'extension_dir' => "An attacker may try to leave a PHP extension in the extensions directory. This directory should not be writable and the web user must not be able to change file permissions",
+	'exit_on_timeout' => "In Apache 1 mod_php may run into an 'inconsistent state', which is always bad. If possible, turn this feature on.",
+	'filter.default' => "Using a default filter or sanitizer for all PHP input is generally not considered good practice. Instead, each input should be handled by the application individually, e.g. validated, sanitized, filtered, then escaped or encoded. The default value is 'unsafe_raw'.",
+	'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
+	'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
 	
 	/* Suhosin */
 	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -589,6 +594,50 @@ foreach (ini_get_all() as $k => $v) {
 			list($result, $reason) = array(TEST_LOW, "error reporting is off.");
 		}
 		break;
+	case 'extension_dir':
+		if ($v !== NULL && $v !== "") {
+			if (realpath($v) === FALSE) {
+				list($result, $reason) = array(TEST_SKIPPED, "path is invalid or not accessible.");
+			} elseif (is_writable($v) || is_writable_or_chmodable($v)) {
+				list($result, $reason) = array(TEST_HIGH, "path is writable or chmod-able.");
+			}
+		}
+		break;
+	case 'exit_on_timeout':
+		if (!isset($_SERVER["SERVER_SOFTWARE"]) || strncmp($_SERVER["SERVER_SOFTWARE"], "Apache/1", strlen("Apache/1")) !== 0) {
+			list($result, $reason) = array(TEST_SKIPPED, "only relevant for Apache 1.");
+		} elseif ($v != "1") {
+			list($result, $reason) = array(TEST_LOW, "not enabled.");
+		}
+		break;
+	case 'filter.default':
+		if ($v !== "unsafe_raw") {
+			list($result, $reason) = array(TEST_MAYBE, "global input filter is set.");
+		}
+		break;
+	case 'highlight.bg':
+	case 'highlight.comment':
+	case 'highlight.default':
+	case 'highlight.html':
+	case 'highlight.keyword':
+	case 'highlight.string':
+		if (extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v) || strlen($v) > 7 || strpos($v, '"') !== FALSE) {
+			list($result, $reason) = array(TEST_MEDIUM, "suspicious color value.");
+			$recommendation = $helptext['highlight.*'];
+		}
+		break;
+	case 'iconv.internal_encoding':
+	case 'iconv.input_encoding':
+	case 'iconv.output_encoding':
+		if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6) {
+			if ($v !== "") {
+				list($result, $reason) = array(TEST_COMMENT, "not empty.");
+				$recommendation = $helptext['iconv.internal_encoding!=empty'];
+			}
+		} else {
+			list($result, $reason) = array(TEST_SKIPPED, "not PHP >=5.6");
+		}
+		break;
 	
 	/* ===== Suhosin ===== */
 	case 'suhosin.simulation':
@@ -728,6 +777,14 @@ foreach (ini_get_all() as $k => $v) {
 	case 'dba.default_handler':
 	case 'enable_post_data_reading':
 	case 'engine': // can only be 1 here anyway.
+	case 'filter.default_flags':
+	case 'from':
+	case 'gd.jpeg_ignore_warning':
+	case 'html_errors':
+	case 'ignore_repeated_errors':
+	case 'ignore_repeated_source':
+	case 'ignore_user_abort':
+	case 'implicit_flush':
 	case 'suhosin.apc_bug_workaround':
 	case 'suhosin.cookie.checkraddr':
 	case 'suhosin.cookie.cryptdocroot':
