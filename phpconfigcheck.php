@@ -270,7 +270,7 @@ $helptext = array(
 	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
 	'suhosin.log.syslog' => "Logging to syslog should be used here.",
 	'suhosin.log.phpscript' => "This should only be used in exceptional cases for classes of errors that could occur during script execution.",
-	'suhosin.executor.max_depth' => "Defines the maximum stack depth that is per- mitted during the execution of PHP scripts. If the stack depth is exceeded, the script will be terminated. This setting should be set to a value that does not interfere with the application, but at the same time does not allow to crash the PHP interpreter, e.g. 500.",
+	'suhosin.executor.max_depth' => "Defines the maximum stack depth that is permitted during the execution of PHP scripts. If the stack depth is exceeded, the script will be terminated. This setting should be set to a value that does not interfere with the application, but at the same time does not allow to crash the PHP interpreter, e.g. 500.",
 	'suhosin.executor.include.max_traversal' => "Defines how often '../' may occur in filenames for include-statements before it is considered to be an attack. A value of zero deactivates the feature. Most PHP-applications do not require a value greater than 5.",
 	'suhosin.*.cryptkey' => "This protection is less effective with a weak key. Please generate a stronger passphrase, e.g. with 'apg -m 32'.",
 	'suhosin.cookie.encrypt=on' => "Be aware, that even encrypted cookie values are still user input and cannot be trusted without proper input handling.",
