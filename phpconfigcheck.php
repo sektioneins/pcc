@@ -590,7 +590,7 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'error_reporting':
-		if ($v === NULL || $v == 0) {
+		if (error_reporting() == 0) {
 			list($result, $reason) = array(TEST_LOW, "error reporting is off.");
 		}
 		break;
@@ -646,12 +646,13 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'suhosin.log.syslog':
-		if ($v === NULL || $v == "0") {
+		if ($v === NULL || $v === "" || $v == "0") {
+			// emty string can be the default value or explicitly unset. -> assume unset.
 			list($result, $reason) = array(TEST_COMMENT, "Suhosin doesn't log to syslog.");
 		}
 		break;
 	case 'suhosin.log.phpscript':
-		if ($v !== NULL && $v != "0") {
+		if ($v !== NULL && $v != "0" && ini_get('suhosin.log.phpscript.name') != "") {
 			list($result, $reason) = array(TEST_COMMENT, "PHP-script for logging.");
 		}
 		break;
