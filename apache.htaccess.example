@@ -1,0 +1,11 @@
+##
+## configuration section for the PHP Secure Configuration Checker (PCC) ##
+
+## Access to PCC
+#SetEnv PCC_ALLOW_IP 172.16.229.*
+
+## Disable mtime check (bad idea)
+#SetEnv PCC_DISABLE_MTIME 1
+
+##
+
