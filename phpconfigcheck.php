@@ -280,6 +280,10 @@ $helptext = array(
 	'suhosin.*.max_value_length=default' => "The default value set as maximum length for each variable may be too small for some applications.",
 	'suhosin.*.disallow_ws' => "Unless your application needs variable names to start with whitespace, please consider turning this option on.",
 	'suhosin.*.max_name_length=off' => "The variable name length should be limited. Please set an appropriate value, e.g. 64.",
+	'suhosin.*.max_array_depth=off' => "The array depth should be limited to avoid denial of service. A reasonable value is 50.",
+	'suhosin.*.max_array_index_length=off' => "The array index length should be limited to avoid denial of s ervice. The default value of 64 is recommended.",
+	'suhosin.*.max_totalname_length=off' => "The variable name length should be limited to a reasonable value, e.g. 256.",
+	'suhosin.*.max_vars=off' => "The number of user supplied input variables should be limited. Reasonable values depend on your application and may go up to 100 or 1000.",
 	'suhosin.log.script.name' => "An attacker may try to inject code into the logging script. Better change file permissions to read-only access.",
 	'suhosin.log.script.name/chmod' => "The logging script is not set writable, but the current user has the right to change the access permission. Please change the file's owner."
 );
@@ -747,6 +751,76 @@ foreach (ini_get_all() as $k => $v) {
 			$recommendation = $helptext['suhosin.*.max_name_length=off'];
 		}
 		break;
+	case 'suhosin.request.max_array_depth':
+		if (intval($v) == 0 &&
+			(intval(ini_get('suhosin.get.max_array_depth')) == 0 ||
+			intval(ini_get('suhosin.post.max_array_depth')) == 0 ||
+			intval(ini_get('suhosin.cookie.max_array_depth')) == 0)) {
+				list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
+				$recommendation = $helptext['suhosin.*.max_array_depth=off'];
+			}
+		break;
+	case 'suhosin.get.max_array_depth':
+	case 'suhosin.post.max_array_depth':
+	case 'suhosin.cookie.max_array_depth':
+		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_depth')) == 0) {
+			list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
+			$recommendation = $helptext['suhosin.*.max_array_depth=off'];
+		}
+		break;
+	case 'suhosin.request.max_array_index_length':
+		if (intval($v) == 0 &&
+			(intval(ini_get('suhosin.get.max_array_index_length')) == 0 ||
+			intval(ini_get('suhosin.post.max_array_index_length')) == 0 ||
+			intval(ini_get('suhosin.cookie.max_array_index_length')) == 0)) {
+				list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
+				$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
+			}
+		break;
+	case 'suhosin.get.max_array_index_length':
+	case 'suhosin.post.max_array_index_length':
+	case 'suhosin.cookie.max_array_index_length':
+		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_index_length')) == 0) {
+			list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
+			$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
+		}
+		break;
+	case 'suhosin.request.max_totalname_length':
+		if (intval($v) == 0 &&
+			(intval(ini_get('suhosin.get.max_totalname_length')) == 0 ||
+			intval(ini_get('suhosin.post.max_totalname_length')) == 0 ||
+			intval(ini_get('suhosin.cookie.max_totalname_length')) == 0)) {
+				list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
+				$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
+			}
+		break;
+	case 'suhosin.get.max_totalname_length':
+	case 'suhosin.post.max_totalname_length':
+	case 'suhosin.cookie.max_totalname_length':
+		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_totalname_length')) == 0) {
+			list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
+			$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
+		}
+		break;
+	case 'suhosin.request.max_vars':
+		if (intval($v) == 0 &&
+			(intval(ini_get('suhosin.get.max_vars')) == 0 ||
+			intval(ini_get('suhosin.post.max_vars')) == 0 ||
+			intval(ini_get('suhosin.cookie.max_vars')) == 0)) {
+				list($result, $reason) = array(TEST_HIGH, "number of request varialbes not limited.");
+				$recommendation = $helptext['suhosin.*.max_vars=off'];
+			}
+		break;
+	case 'suhosin.get.max_vars':
+	case 'suhosin.post.max_vars':
+	case 'suhosin.cookie.max_vars':
+		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_vars')) == 0) {
+			list($result, $reason) = array(TEST_MEDIUM, "number of variables not limited.");
+			$recommendation = $helptext['suhosin.*.max_vars=off'];
+		}
+		break;
+		
+
 	case 'suhosin.log.script.name':
 	case 'suhosin.log.phpscript.name':
 		if ($v !== "") {
