@@ -311,6 +311,7 @@ foreach (ini_get_all() as $k => $v) {
 	$reason = NULL;
 	$recommendation = NULL;
 	if (isset($helptext[$k])) { $recommendation = $helptext[$k]; }
+	$ignore = 0;
 
 	switch ($k) {
 	case 'display_errors':
@@ -913,8 +914,9 @@ foreach (ini_get_all() as $k => $v) {
 	/* ===== unknown / ignored ===== */
 	default:
 		list($result, $reason) = array(TEST_UNKNOWN, "unknown / not checked.");
-		// echo "unknown ini: $k =  $v\n";
 	}
+	
+	if ($ignore) { continue; }
 	
 	if ($result === NULL) {
 		tres($meta, TEST_OK);
