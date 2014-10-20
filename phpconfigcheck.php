@@ -107,6 +107,18 @@ if (php_sapi_name() == "cli") {
 	$cfg['output_type'] = "text";
 	$cfg['is_cli'] = true;
 	
+	if (function_exists('getopt')) {
+		foreach (getopt("ha") as $k => $v) {
+			switch ($k) {
+				case 'h':
+					$cfg['output_type'] = 'html';
+					break;
+				case 'a':
+					$cfg['showall'] = 1;
+					break;
+			}
+		}
+	}
 } else {
 	$cfg['output_type'] = "html";
 	$cfg['is_cli'] = false;
