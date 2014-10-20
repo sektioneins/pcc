@@ -258,6 +258,7 @@ $helptext = array(
 	'always_populate_raw_post_data' => "In a shared hosting environment it should not be the default to let the unexperienced user parse raw POST data themselves. Otherwise, this options should only be used, if accessing the raw POST data is actually required.",
 	'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
 	'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
+	'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
 	'auto_append_file' => "PHP is automatically executing an extra script for each request. An attacker may have planted it there. If this is unexpected, deactivate.",
 	'cli.pager' => "PHP executes an extra script to process CLI output. An attacker may have planted it there. If this is unexpected, deactivate.",
 	'cli.prompt' => "An overlong CLI prompt may indicate incorrect configuration. Please check manually.",
@@ -277,6 +278,7 @@ $helptext = array(
 	'filter.default' => "Using a default filter or sanitizer for all PHP input is generally not considered good practice. Instead, each input should be handled by the application individually, e.g. validated, sanitized, filtered, then escaped or encoded. The default value is 'unsafe_raw'.",
 	'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
 	'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
+	'asp_tags' => "ASP-Style tags are quite uncommon for PHP. If you don't actually require your PHP-code to start with <%, this options should be deactivated.",
 	
 	/* Suhosin */
 	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -523,6 +525,11 @@ foreach (ini_get_all() as $k => $v) {
 			list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
 		}
 		break;
+	case 'assert.callback':
+		if (ini_get('assert.active') && $v !== "" && $v !== null) {
+			list($result, $reason) = array(TEST_MEDIUM, "assert callback set.");
+		}
+		break;
 	case 'auto_append_file':
 	case 'auto_prepend_file':
 		if ($v !== NULL && $v !== "") {
@@ -654,6 +661,11 @@ foreach (ini_get_all() as $k => $v) {
 			list($result, $reason) = array(TEST_SKIPPED, "not PHP >=5.6");
 		}
 		break;
+	case 'asp_tags':
+	if ($v == "1") {
+		list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
+	}
+	break;
 	
 	/* ===== Suhosin ===== */
 	case 'suhosin.simulation':
@@ -846,11 +858,16 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	
+	/* ===== known, but extra check below. ===== */
+	case 'error_log':
+	case 'include_path':
+		// silently ignore this option
+		$ignore = 1;
+		break;
+	
 	/* ===== known, but probably not security relevant ===== */
-	case 'asp_tags':
 	case 'precision':
 	case 'assert.bail':
-	case 'assert.callback':
 	case 'assert.quiet_eval':
 	case 'assert.warning':
 	case 'auto_detect_line_endings':
@@ -864,6 +881,12 @@ foreach (ini_get_all() as $k => $v) {
 	case 'dba.default_handler':
 	case 'enable_post_data_reading':
 	case 'engine': // can only be 1 here anyway.
+	case 'exif.decode_jis_intel':
+	case 'exif.decode_jis_motorola':
+	case 'exif.decode_unicode_intel':
+	case 'exif.decode_unicode_motorola':
+	case 'exif.encode_jis':
+	case 'exif.encode_unicode':
 	case 'filter.default_flags':
 	case 'from':
 	case 'gd.jpeg_ignore_warning':
