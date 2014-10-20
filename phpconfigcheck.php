@@ -223,709 +223,714 @@ function is_writable_or_chmodable($fn)
 
 /*****************************************************************************/
 
-$helptext = array(
-	"display_errors" => "Error messages can divulge information about the inner workings of an application and may include private information such as Session-ID, personal data, database structures, source code exerpts. It is recommended to log errors, but not to display them on live systems.",
-	'log_errors' => "While it may be a good idea to avoid logging altogether from a privacy point of view, monitoring the error log of an application can lead to detecting attacks, programming and configuration errors.",
-	'expose_php' => "Knowing the exact PHP version - sometimes including patchlevel and operating system - is a good start for automated attack tools. Best not to share this information.",
-	'max_execution_time' => "In order to prevent denial-of-service attacks where an attacker tries to keep your server's CPU busy, this value should be set to the lowest possible value, e.g. 30 (seconds).",
-	'max_input_time' => "It may be useful to limit the time a script is allowed to parse input. This should be decided on a per application basis.",
-	'max_input_nesting_level' => "Deep input nesting is only required in rare cases and may trigger unexpected ressource limits.",
-	'memory_limit' => "A high memory limit may easy lead lead to ressource exhaustion and thus make your application vulnerable to denial-of-service attacks. This value should be set approximately 20% above empirically gathered maximum memory requirement.",
-	'post_max_size' => "Setting the maximum allowed POST size to a high value may lead to denial-of-service from memory exhaustion. If your application does not need huge file uploads, consider setting this option to a lower value. Note: File uploads have to be covered by this setting as well.",
-	'post_max_size>memory_limit' => "post_max_size must be lower than memory_limit. Otherwise, a simple POST request will let PHP reach the configured memory limit and stop execution. Apart from denial-of-service an attacker may try to split a transaction, e.g. let PHP execute only a part of a program.",
-	'upload_max_filesize' => "This value should match the file size actually required.",
-	'allow_url_fopen' => "Deactivate, if possible. Allowing URLs in fopen() can be a suprising side-effect for unexperienced developers. Even if deactivated, it is still possible to receive content from URLs, e.g. with curl.",
-	'allow_url_include' => "This flag should remain deactivated for security reasons.",
-	'magic_quotes' => "This option should be deactivated. Instead, user input should be escaped properly and handled in a secure way when building database queries. The use of magic quotes or similar behaviour is highly discouraged. Current PHP versions do not support this feature anymore.",
-	'enable_dl' => "Deactivate this option to prevent arbitrary code to be loaded during runtime (see dl()).",
-	'disable_functions' => "Potentially dangerous and unused functions should be deactivated, e.g. system().",
-	'disable_classes' => "Potentially dangerous and unused classes should be deactivated.",
-	'request_order' => "It is recommended to use GP to register GET and POST with REQUEST.",
-	'variables_order' => "Changing this setting is usually not necessary; however, the ENV variables are rarely used.",
-	'auto_globals_jit' => "Unless access to these variables is done through variable variables this option can remain activated.",
-	'register_globals' => "This relic from the past is not available in current PHP versions. If it is there anyway, keep it deactivated! Please.",
-	'file_uploads' => "If an application does not require HTTP file uploads, this setting should be deactivated.",
-	'filter.default' => "This should only be set if the application is specifically designed to handle filtered values. Usually it is considered bad practice to filter all user input in one place. Instead, each user input should be validated and then escaped/encoded according to its context.",
-	'open_basedir' => "Usually it is a good idea to restrict file system access to directories related to the application, e.g. the document root.",
-	'session.save_path' => "This path should be set to a directory unique to your application, but outside the document root, e.g. /opt/php_sessions/application_1. If this application is the only application on your server, or a custom storage mechanism for sessions has been implemented, or you don't need sessions at all, then the default should be fine.",
-	'session.cookie_httponly' => "This option controls if cookies are tagged with httpOnly which makes them accessible by HTTP only and not by the JavaScript. httpOnly cookies are supported by all major browser vendors and therefore can be instrumental in minimising the danger of session hijacking. It should either be activated here or in your application with session_set_cookie_params().",
-	'session.cookie_secure' => "This options controls if cookies are tagged as secure and should therefore be sent over SSL encrypted connections only. It should either be activated here or in your application with session_set_cookie_params().",
-	'session.cookie_lifetime' => "Not limiting the cookie lifetime increases the chance for an attacker to be able to steal the session cookie. Depending on your application, this should be set to a reasonable value here or with session_set_cookie_params().",
-	'session.referer_check' => "PHP can invalidate a session ID if the submitted HTTP Referer does not contain a configured substring. The Referer can be set by a custom client/browser or plugins (e.g. Flash, Java). However it may prevent some cases of CSRF attacks, where the attacker can not control the client's Referer.",
-	'session.use_strict_mode' => "If activated, PHP will regenerate unknown session IDs. This effectively counteracts session fixation attacks.",
-	'session.use_cookies' => "If activated, PHP will store the session ID in a cookie on the client side. This is recommended.",
-	'session.use_only_cookies' => "PHP will send the session ID only via cookie to the client, not e.g. in the URL. Please activate.",
-	'always_populate_raw_post_data' => "In a shared hosting environment it should not be the default to let the unexperienced user parse raw POST data themselves. Otherwise, this options should only be used, if accessing the raw POST data is actually required.",
-	'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
-	'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
-	'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
-	'auto_append_file' => "PHP is automatically executing an extra script for each request. An attacker may have planted it there. If this is unexpected, deactivate.",
-	'cli.pager' => "PHP executes an extra script to process CLI output. An attacker may have planted it there. If this is unexpected, deactivate.",
-	'cli.prompt' => "An overlong CLI prompt may indicate incorrect configuration. Please check manually.",
-	'curl.cainfo' => "Incorrect configuration of this option may prevent cURL from validating a certificate.",
-	'docref_*' => "This setting may reveal internal ressources, e.g. internal server names. Setting docref_root or docref_ext implies HTML output of error messages, which is bad practice for live environments and may reveal useful information to an attacker as well.",
-	'default_charset=empty' => "Not setting the default charset can make your application vulnerable to injection attacks based on incorrect interpretation of your data's character encoding. If unsure, set this to 'UTF-8'. HTML output should should contain the same value, e.g. <meta charset=\"utf-8\"/>. Also, your webserver can be configured accordingly, e.g. 'AddDefaultCharset UTF-8' for Apache2.",
-	'default_charset=typo' => "Change this to 'UTF-8' immediately.",
-	'default_charset=iso-8859' => "There is nothing wrong with ISO8859 charsets. However, the hipster way to deliver content tries not to discriminate and allows multibyte characters, e.g. Klingon unicode characters, too. Some browsers may even be so bold as to use a multibyte encoding anyway, regardless of this setting.",
-	'default_charset=custom' => "A custom charset is perfectly fine as long as your entire chain of character encoding knows about this. E.g. the application, database connections, PHP, the webserver, ... all have the same encoding or know how to convert appropriately. In particular calls to escaping functions such as htmlentities() and htmlspecialchars() must be called with the correct encoding.",
-	'default_mimetype' => "Please set a default mime type, e.g. 'text/html' or 'text/plain'. The mime type should always reflect the actual content. But it is a good idea to define a fallback here anyway. An incorrectly stated mime type can lead to injection attacks, e.g. using 'text/html' with JSON data may lead to XSS.",
-	'default_socket_timeout' => "By delaying the process to establish a socket connection, an attacker may be able to do a denial-of-service (DoS) attack. Please set this value to a reasonably small value for your environment, e.g. 10.",
-	'doc_root=empty' => "The PHP documentation strongly recommends to set this value when using CGI and cgi.force_redirect is off.",
-	'error_append_string' => "PHP adds additional output to error messages. If planted by an attacker, this string may contain script content and lead to XSS. Please check.",
-	'error_reporting' => "PHP error reporting can provide useful information about misconfiguration and programming errors, as well as possible attacks. Please consider setting this value.",
-	'extension_dir' => "An attacker may try to leave a PHP extension in the extensions directory. This directory should not be writable and the web user must not be able to change file permissions",
-	'exit_on_timeout' => "In Apache 1 mod_php may run into an 'inconsistent state', which is always bad. If possible, turn this feature on.",
-	'filter.default' => "Using a default filter or sanitizer for all PHP input is generally not considered good practice. Instead, each input should be handled by the application individually, e.g. validated, sanitized, filtered, then escaped or encoded. The default value is 'unsafe_raw'.",
-	'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
-	'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
-	'asp_tags' => "ASP-Style tags are quite uncommon for PHP. If you don't actually require your PHP-code to start with <%, this options should be deactivated.",
+function test_all_ini_entries()
+{
+	$helptext = array(
+		"display_errors" => "Error messages can divulge information about the inner workings of an application and may include private information such as Session-ID, personal data, database structures, source code exerpts. It is recommended to log errors, but not to display them on live systems.",
+		'log_errors' => "While it may be a good idea to avoid logging altogether from a privacy point of view, monitoring the error log of an application can lead to detecting attacks, programming and configuration errors.",
+		'expose_php' => "Knowing the exact PHP version - sometimes including patchlevel and operating system - is a good start for automated attack tools. Best not to share this information.",
+		'max_execution_time' => "In order to prevent denial-of-service attacks where an attacker tries to keep your server's CPU busy, this value should be set to the lowest possible value, e.g. 30 (seconds).",
+		'max_input_time' => "It may be useful to limit the time a script is allowed to parse input. This should be decided on a per application basis.",
+		'max_input_nesting_level' => "Deep input nesting is only required in rare cases and may trigger unexpected ressource limits.",
+		'memory_limit' => "A high memory limit may easy lead lead to ressource exhaustion and thus make your application vulnerable to denial-of-service attacks. This value should be set approximately 20% above empirically gathered maximum memory requirement.",
+		'post_max_size' => "Setting the maximum allowed POST size to a high value may lead to denial-of-service from memory exhaustion. If your application does not need huge file uploads, consider setting this option to a lower value. Note: File uploads have to be covered by this setting as well.",
+		'post_max_size>memory_limit' => "post_max_size must be lower than memory_limit. Otherwise, a simple POST request will let PHP reach the configured memory limit and stop execution. Apart from denial-of-service an attacker may try to split a transaction, e.g. let PHP execute only a part of a program.",
+		'upload_max_filesize' => "This value should match the file size actually required.",
+		'allow_url_fopen' => "Deactivate, if possible. Allowing URLs in fopen() can be a suprising side-effect for unexperienced developers. Even if deactivated, it is still possible to receive content from URLs, e.g. with curl.",
+		'allow_url_include' => "This flag should remain deactivated for security reasons.",
+		'magic_quotes' => "This option should be deactivated. Instead, user input should be escaped properly and handled in a secure way when building database queries. The use of magic quotes or similar behaviour is highly discouraged. Current PHP versions do not support this feature anymore.",
+		'enable_dl' => "Deactivate this option to prevent arbitrary code to be loaded during runtime (see dl()).",
+		'disable_functions' => "Potentially dangerous and unused functions should be deactivated, e.g. system().",
+		'disable_classes' => "Potentially dangerous and unused classes should be deactivated.",
+		'request_order' => "It is recommended to use GP to register GET and POST with REQUEST.",
+		'variables_order' => "Changing this setting is usually not necessary; however, the ENV variables are rarely used.",
+		'auto_globals_jit' => "Unless access to these variables is done through variable variables this option can remain activated.",
+		'register_globals' => "This relic from the past is not available in current PHP versions. If it is there anyway, keep it deactivated! Please.",
+		'file_uploads' => "If an application does not require HTTP file uploads, this setting should be deactivated.",
+		'filter.default' => "This should only be set if the application is specifically designed to handle filtered values. Usually it is considered bad practice to filter all user input in one place. Instead, each user input should be validated and then escaped/encoded according to its context.",
+		'open_basedir' => "Usually it is a good idea to restrict file system access to directories related to the application, e.g. the document root.",
+		'session.save_path' => "This path should be set to a directory unique to your application, but outside the document root, e.g. /opt/php_sessions/application_1. If this application is the only application on your server, or a custom storage mechanism for sessions has been implemented, or you don't need sessions at all, then the default should be fine.",
+		'session.cookie_httponly' => "This option controls if cookies are tagged with httpOnly which makes them accessible by HTTP only and not by the JavaScript. httpOnly cookies are supported by all major browser vendors and therefore can be instrumental in minimising the danger of session hijacking. It should either be activated here or in your application with session_set_cookie_params().",
+		'session.cookie_secure' => "This options controls if cookies are tagged as secure and should therefore be sent over SSL encrypted connections only. It should either be activated here or in your application with session_set_cookie_params().",
+		'session.cookie_lifetime' => "Not limiting the cookie lifetime increases the chance for an attacker to be able to steal the session cookie. Depending on your application, this should be set to a reasonable value here or with session_set_cookie_params().",
+		'session.referer_check' => "PHP can invalidate a session ID if the submitted HTTP Referer does not contain a configured substring. The Referer can be set by a custom client/browser or plugins (e.g. Flash, Java). However it may prevent some cases of CSRF attacks, where the attacker can not control the client's Referer.",
+		'session.use_strict_mode' => "If activated, PHP will regenerate unknown session IDs. This effectively counteracts session fixation attacks.",
+		'session.use_cookies' => "If activated, PHP will store the session ID in a cookie on the client side. This is recommended.",
+		'session.use_only_cookies' => "PHP will send the session ID only via cookie to the client, not e.g. in the URL. Please activate.",
+		'always_populate_raw_post_data' => "In a shared hosting environment it should not be the default to let the unexperienced user parse raw POST data themselves. Otherwise, this options should only be used, if accessing the raw POST data is actually required.",
+		'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
+		'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
+		'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
+		'auto_append_file' => "PHP is automatically executing an extra script for each request. An attacker may have planted it there. If this is unexpected, deactivate.",
+		'cli.pager' => "PHP executes an extra script to process CLI output. An attacker may have planted it there. If this is unexpected, deactivate.",
+		'cli.prompt' => "An overlong CLI prompt may indicate incorrect configuration. Please check manually.",
+		'curl.cainfo' => "Incorrect configuration of this option may prevent cURL from validating a certificate.",
+		'docref_*' => "This setting may reveal internal ressources, e.g. internal server names. Setting docref_root or docref_ext implies HTML output of error messages, which is bad practice for live environments and may reveal useful information to an attacker as well.",
+		'default_charset=empty' => "Not setting the default charset can make your application vulnerable to injection attacks based on incorrect interpretation of your data's character encoding. If unsure, set this to 'UTF-8'. HTML output should should contain the same value, e.g. <meta charset=\"utf-8\"/>. Also, your webserver can be configured accordingly, e.g. 'AddDefaultCharset UTF-8' for Apache2.",
+		'default_charset=typo' => "Change this to 'UTF-8' immediately.",
+		'default_charset=iso-8859' => "There is nothing wrong with ISO8859 charsets. However, the hipster way to deliver content tries not to discriminate and allows multibyte characters, e.g. Klingon unicode characters, too. Some browsers may even be so bold as to use a multibyte encoding anyway, regardless of this setting.",
+		'default_charset=custom' => "A custom charset is perfectly fine as long as your entire chain of character encoding knows about this. E.g. the application, database connections, PHP, the webserver, ... all have the same encoding or know how to convert appropriately. In particular calls to escaping functions such as htmlentities() and htmlspecialchars() must be called with the correct encoding.",
+		'default_mimetype' => "Please set a default mime type, e.g. 'text/html' or 'text/plain'. The mime type should always reflect the actual content. But it is a good idea to define a fallback here anyway. An incorrectly stated mime type can lead to injection attacks, e.g. using 'text/html' with JSON data may lead to XSS.",
+		'default_socket_timeout' => "By delaying the process to establish a socket connection, an attacker may be able to do a denial-of-service (DoS) attack. Please set this value to a reasonably small value for your environment, e.g. 10.",
+		'doc_root=empty' => "The PHP documentation strongly recommends to set this value when using CGI and cgi.force_redirect is off.",
+		'error_append_string' => "PHP adds additional output to error messages. If planted by an attacker, this string may contain script content and lead to XSS. Please check.",
+		'error_reporting' => "PHP error reporting can provide useful information about misconfiguration and programming errors, as well as possible attacks. Please consider setting this value.",
+		'extension_dir' => "An attacker may try to leave a PHP extension in the extensions directory. This directory should not be writable and the web user must not be able to change file permissions",
+		'exit_on_timeout' => "In Apache 1 mod_php may run into an 'inconsistent state', which is always bad. If possible, turn this feature on.",
+		'filter.default' => "Using a default filter or sanitizer for all PHP input is generally not considered good practice. Instead, each input should be handled by the application individually, e.g. validated, sanitized, filtered, then escaped or encoded. The default value is 'unsafe_raw'.",
+		'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
+		'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
+		'asp_tags' => "ASP-Style tags are quite uncommon for PHP. If you don't actually require your PHP-code to start with <%, this options should be deactivated.",
 	
-	/* Suhosin */
-	'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
-	'suhosin.log.syslog' => "Logging to syslog should be used here.",
-	'suhosin.log.phpscript' => "This should only be used in exceptional cases for classes of errors that could occur during script execution.",
-	'suhosin.executor.max_depth' => "Defines the maximum stack depth that is permitted during the execution of PHP scripts. If the stack depth is exceeded, the script will be terminated. This setting should be set to a value that does not interfere with the application, but at the same time does not allow to crash the PHP interpreter, e.g. 500.",
-	'suhosin.executor.include.max_traversal' => "Defines how often '../' may occur in filenames for include-statements before it is considered to be an attack. A value of zero deactivates the feature. Most PHP-applications do not require a value greater than 5.",
-	'suhosin.*.cryptkey' => "This protection is less effective with a weak key. Please generate a stronger passphrase, e.g. with 'apg -m 32'.",
-	'suhosin.cookie.encrypt=on' => "Be aware, that even encrypted cookie values are still user input and cannot be trusted without proper input handling.",
-	'suhosin.cookie.encrypt=off' => "Suhosin can transparently encrypt cookies. This feature makes attacks based on tampering with a cookie value much harder. If at all possible, this feature should always be activated.",
-	'suhosin.*.disallow_nul' => "Unless binary data is handled unencoded - which would be very obscure - this feature wants to remain enabled.",
-	'suhosin.*.max_value_length=off' => "By disabling this protection PHP will be exposed to input variables of arbitrary length. It is highly recommended to set this value to the maximum length one variable is supposed to have. With file uploads in mind, request and post limits can be set to a high value.",
-	'suhosin.*.max_value_length=default' => "The default value set as maximum length for each variable may be too small for some applications.",
-	'suhosin.*.disallow_ws' => "Unless your application needs variable names to start with whitespace, please consider turning this option on.",
-	'suhosin.*.max_name_length=off' => "The variable name length should be limited. Please set an appropriate value, e.g. 64.",
-	'suhosin.*.max_array_depth=off' => "The array depth should be limited to avoid denial of service. A reasonable value is 50.",
-	'suhosin.*.max_array_index_length=off' => "The array index length should be limited to avoid denial of s ervice. The default value of 64 is recommended.",
-	'suhosin.*.max_totalname_length=off' => "The variable name length should be limited to a reasonable value, e.g. 256.",
-	'suhosin.*.max_vars=off' => "The number of user supplied input variables should be limited. Reasonable values depend on your application and may go up to 100 or 1000.",
-	'suhosin.log.script.name' => "An attacker may try to inject code into the logging script. Better change file permissions to read-only access.",
-	'suhosin.log.script.name/chmod' => "The logging script is not set writable, but the current user has the right to change the access permission. Please change the file's owner."
-);
+		/* Suhosin */
+		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
+		'suhosin.log.syslog' => "Logging to syslog should be used here.",
+		'suhosin.log.phpscript' => "This should only be used in exceptional cases for classes of errors that could occur during script execution.",
+		'suhosin.executor.max_depth' => "Defines the maximum stack depth that is permitted during the execution of PHP scripts. If the stack depth is exceeded, the script will be terminated. This setting should be set to a value that does not interfere with the application, but at the same time does not allow to crash the PHP interpreter, e.g. 500.",
+		'suhosin.executor.include.max_traversal' => "Defines how often '../' may occur in filenames for include-statements before it is considered to be an attack. A value of zero deactivates the feature. Most PHP-applications do not require a value greater than 5.",
+		'suhosin.*.cryptkey' => "This protection is less effective with a weak key. Please generate a stronger passphrase, e.g. with 'apg -m 32'.",
+		'suhosin.cookie.encrypt=on' => "Be aware, that even encrypted cookie values are still user input and cannot be trusted without proper input handling.",
+		'suhosin.cookie.encrypt=off' => "Suhosin can transparently encrypt cookies. This feature makes attacks based on tampering with a cookie value much harder. If at all possible, this feature should always be activated.",
+		'suhosin.*.disallow_nul' => "Unless binary data is handled unencoded - which would be very obscure - this feature wants to remain enabled.",
+		'suhosin.*.max_value_length=off' => "By disabling this protection PHP will be exposed to input variables of arbitrary length. It is highly recommended to set this value to the maximum length one variable is supposed to have. With file uploads in mind, request and post limits can be set to a high value.",
+		'suhosin.*.max_value_length=default' => "The default value set as maximum length for each variable may be too small for some applications.",
+		'suhosin.*.disallow_ws' => "Unless your application needs variable names to start with whitespace, please consider turning this option on.",
+		'suhosin.*.max_name_length=off' => "The variable name length should be limited. Please set an appropriate value, e.g. 64.",
+		'suhosin.*.max_array_depth=off' => "The array depth should be limited to avoid denial of service. A reasonable value is 50.",
+		'suhosin.*.max_array_index_length=off' => "The array index length should be limited to avoid denial of s ervice. The default value of 64 is recommended.",
+		'suhosin.*.max_totalname_length=off' => "The variable name length should be limited to a reasonable value, e.g. 256.",
+		'suhosin.*.max_vars=off' => "The number of user supplied input variables should be limited. Reasonable values depend on your application and may go up to 100 or 1000.",
+		'suhosin.*script/writable' => "An attacker may try to inject code into the logging/upload script. Better change file permissions to read-only access.",
+		'suhosin.*script/chmod' => "The logging or upload script is not set writable, but the current user has the right to change its access permission. Please change the file's owner."
+	);
 
-// php.ini checks
-foreach (ini_get_all() as $k => $v) {
-	$v = $v["local_value"]; // for compatibility with PHP <5.3.0 ini_get_all() is not called with the second 'detail' parameter.
+	// php.ini checks
+	foreach (ini_get_all() as $k => $v) {
+		$v = $v["local_value"]; // for compatibility with PHP <5.3.0 ini_get_all() is not called with the second 'detail' parameter.
 
-	$meta = tdesc("php.ini / $k");
-	$result = NULL;
-	$reason = NULL;
-	$recommendation = NULL;
-	if (isset($helptext[$k])) { $recommendation = $helptext[$k]; }
-	$ignore = 0;
+		$meta = tdesc("php.ini / $k");
+		$result = NULL;
+		$reason = NULL;
+		$recommendation = NULL;
+		if (isset($helptext[$k])) { $recommendation = $helptext[$k]; }
+		$ignore = 0;
 
-	switch ($k) {
-	case 'display_errors':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MEDIUM, "display_errors is on.");
-		}
-		break;
-	case 'display_startup_errors':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MEDIUM, "display_startup_errors is on.");
-			$recommendation = $helptext['display_errors'];
-		}
-		break;
-	case 'log_errors':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_LOW, "You are not logging errors.");
-		}
-		break;
-	case 'expose_php':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_LOW, "PHP is exposed by HTTP headers.");
-		}
-		break;
-	case 'max_execution_time':
-		if (intval($v) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "Execution time is not limited.");
-		} elseif (intval($v) >= 300) {
-			list($result, $reason) = array(TEST_LOW, "Execution time limit is rather high.");
-		}
-		break;
-	case 'max_input_time':
-		if ($v == "-1") {
-			list($result, $reason) = array(TEST_MAYBE, "Input parsing time not limited.");
-		}
-		break;
-	case 'max_input_nesting_level':
-		if (intval($v) > 128) {
-			list($result, $reason) = array(TEST_MEDIUM, "Input nesting level extremely high.");
-		} elseif (intval($v) > 64) {
-			list($result, $reason) = array(TEST_MAYBE, "Input nesting level higher than usual.");
-		}
-		break;
-	case 'memory_limit':
-		$v = ini_atol($v);
-		if ($v < 0) {
-			list($result, $reason) = array(TEST_HIGH, "Memory limit deactivated.");
-		} elseif (ini_atol($v) >= 128*1024*1024) { // default value
-			list($result, $reason) = array(TEST_MAYBE, "Memory limit is 128M or more.");
-		}
-		break;
-	case 'post_max_size':
-		$tmp = ini_atol(ini_get('memory_limit'));
-		$v = ini_atol($v);
-		if ($tmp < 0) {
-			if ($v >= ini_atol('2G')) {
-				list($result, $reason) = array(TEST_MAYBE, "post_max_size is >= 2G.");
+		switch ($k) {
+		case 'display_errors':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MEDIUM, "display_errors is on.");
 			}
 			break;
-		}
-		if ($v > $tmp) {
-			list($result, $reason) = array(TEST_HIGH, "post_max_size is greater than memory_limit.");
-			$recommendation = $helptext['post_max_size>memory_limit'];
-		}
-		break;
-	case 'upload_max_filesize':
-		if ($v === "2M") {
-			list($result, $reason) = array(TEST_COMMENT, "default value.");
-		} elseif (ini_atol($v) >= ini_atol("2G")) {
-			list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
-		}
-		break;
-	case 'allow_url_fopen':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_HIGH, "fopen() is allowed to open URLs.");
-		}
-		break;
-	case 'allow_url_include':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_HIGH, "include/require() can include URLs.");
-		}
-		break;
-	case 'magic_quotes_gpc':
-		if (get_magic_quotes_gpc()) {
-			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
-			$recommendation = $helptext['magic_quotes'];
-		}
-		break;
-	case 'magic_quotes_runtime':
-		if (get_magic_quotes_runtime()) {
-			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
-			$recommendation = $helptext['magic_quotes'];
-		}
-		break;
-	case 'magic_quotes_sybase':
-		if ($v != "0") {
-			list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
-			$recommendation = $helptext['magic_quotes'];
-		}
-		break;
-	case 'enable_dl':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_HIGH, "PHP can load extensions during runtime.");
-		}
-		break;
-	case 'disable_functions':
-		$v = ini_list($v);
-		if (!$v) {
-			list($result, $reason) = array(TEST_MEDIUM, "no functions disabled.");
-		}
-		break;
-	case 'disable_classes':
-		$v = ini_list($v);
-		if (!$v) {
-			list($result, $reason) = array(TEST_MEDIUM, "no classes disabled.");
-		}
-		break;
-	case 'request_order':
-		$v = strtoupper($v);
-		if ($v === "GP") {break;} // ok
-		if (strstr($v, 'C') !== FALSE) {
-			list($result, $reason) = array(TEST_MAYBE, "cookie values in $_REQUEST.");
-		}
-		if (strstr(str_replace('C', $v, ''), 'PG') !== FALSE) {
-			list($result, $reason) = array(TEST_LOW, "GET overrides POST in $_REQUEST.");
-		}
-		break;
-	case 'variables_order':
-		if ($v === "GPCS") { break; }
-		if ($v !== "EGPCS") {
-			list($result, $reason) = array(TEST_COMMENT, "custom variables_order.");
-		} else {
-			$result = TEST_OK; // result set includes default helptext
-		}
-		break;
-	case 'auto_globals_jit':
-		$result = TEST_OK;
-		break;
-	case 'register_globals':
-		if ($v !== "" && $v !== "0") {
-			list($result, $reason) = array(TEST_CRITICAL, "register_globals is on.");
-		}
-		break;
-	case 'file_uploads':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MAYBE, "file uploads are allowed.");
-		}
-		break;
-	case 'filter.default':
-		if ($v !== "unsafe_raw") {
-			list($result, $reason) = array(TEST_MAYBE, "default input filter set.");
-		}
-		break;
-	case 'open_basedir':
-		if ($v == "") {
-			list($result, $reason) = array(TEST_LOW, "open_basedir not set.");
-		}
-		break;
-	case 'session.save_path':
-		if ($v == "") {
-			list($result, $reason) = array(TEST_MAYBE, "session save path not set.");
-		}
-		break;
-	case 'session.cookie_httponly':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_MAYBE, "no implicit httpOnly-flag for session cookie.");
-		}
-		break;
-	case 'session.cookie_secure':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_MAYBE, "no implicit secure-flag for session cookie.");
-		}
-		break;
-	case 'session.cookie_lifetime':
-		if ($v == "0") {
-			list($result, $reason) = array(TEST_MAYBE, "no implicit lifetime for session cookie.");
-		}
-		break;
-	case 'session.referer_check':
-		if ($v === "") {
-			list($result, $reason) = array(TEST_COMMENT, "referer check not activated.");
-		}
-		break;
-	case 'session.use_strict_mode':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_MEDIUM, "strict mode not activated.");
-		}
-		break;
-	case 'session.use_cookies':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_HIGH, "Session ID not stored in cookie.");
-		}
-		break;
-	case 'session.use_only_cookies':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_HIGH, "Session ID not limited to cookie.");
-		}
-		break;
-	case 'always_populate_raw_post_data':
-		if ($v != "0") {
-			list($result, $reason) = array(TEST_COMMENT, "HTTP_RAW_POST_DATA is available.");
-		}
-		break;
-	case 'arg_separator.input':
-	case 'arg_separator.output':
-		if ($v !== "&") {
-			list($result, $reason) = array(TEST_MAYBE, "unusual arg separator.");
-			$recommendation = $helptext['arg_separator'];
-		}
-		break;
-	case 'assert.active':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
-		}
-		break;
-	case 'assert.callback':
-		if (ini_get('assert.active') && $v !== "" && $v !== null) {
-			list($result, $reason) = array(TEST_MEDIUM, "assert callback set.");
-		}
-		break;
-	case 'auto_append_file':
-	case 'auto_prepend_file':
-		if ($v !== NULL && $v !== "") {
-			list($result, $reason) = array(TEST_MAYBE, "$k is set.");
-			$recommendation = $helptext['auto_append_file'];
-		}
-		break;
-	case 'cli.pager':
-		if ($v !== NULL && $v !== "") {
-			list($result, $reason) = array(TEST_MAYBE, "CLI pager set.");
-		}
-		break;
-	case 'cli.prompt':
-		if ($v !== NULL && strlen($v) > 32) {
-			list($result, $reason) = array(TEST_MAYBE, "CLI prompt is rather long (>32).");
-		}
-		break;
-	case 'curl.cainfo':
-		if ($v !== "") {
-			if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $is_win && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
-				list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO must be an absolute path.");
-			} elseif (!is_readable($v)) {
-				list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
+		case 'display_startup_errors':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MEDIUM, "display_startup_errors is on.");
+				$recommendation = $helptext['display_errors'];
 			}
-			
-		}
-		break;
-	case 'docref_root':
-	case 'docref_ext':
-		if ($v !== NULL && $v !== "") {
-			list($result, $reason) = array(TEST_LOW, "docref is set.");
-			$recommendation = $helptext['docref_*'];
-		}
-		break;
-	case 'default_charset':
-		if ($v == "") {
-			list($result, $reason) = array(TEST_HIGH, "default charset not explicitly set.");
-			$recommendation = $helptext['default_charset=empty'];
-		} elseif (stripos($v, "iso-8859") === 0) {
-			list($result, $reason) = array(TEST_MAYBE, "charset without multibyte support.");
-			$recommendation = $helptext['default_charset=iso-8859'];
-		} elseif (strtolower($v) == "utf8") {
-			list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
-			$recommendation = $helptext['default_charset=typo'];
-		} elseif (strtolower($v) == "utf-8") {
-			// ok.
-		} else {
-			list($result, $reason) = array(TEST_COMMENT, "custom charset.");
-			$recommendation = $helptext['default_charset=custom'];
-		}
-		break;
-	case 'default_mimetype':
-		if ($v == "") {
-			list($result, $reason) = array(TEST_HIGH, "default mimetype not set.");
-		}
-		break;
-	case 'default_socket_timeout':
-		if (intval ($v) > 60) {
-			list($result, $reason) = array(TEST_LOW, "default socket timeout rather big.");
-		}
-		break;
-	case 'doc_root':
-		if (!$cfg['is_cgi']) {
-			list($result, $reason) = array(TEST_SKIPPED, "no CGI environment.");
 			break;
-		}
-		if (ini_get('cgi.force_redirect')) {
-			list($result, $reason) = array(TEST_SKIPPED, "cgi.force_redirect is on instead.");
+		case 'log_errors':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_LOW, "You are not logging errors.");
+			}
 			break;
-		}
-		if ($v == "") {
-			list($result, $reason) = array(TEST_MEDIUM, "doc_root not set.");
-			$recommendation = $helptext['doc_root=empty'];
-		}
-		break;
-	case 'error_prepend_string':
-	case 'error_append_string':
-		if ($v !== NULL && $v !== "") {
-			list($result, $reason) = array(TEST_MAYBE, "$k is set.");
-			$recommendation = $helptext['error_append_string'];
-		}
-		break;
-	case 'error_reporting':
-		if (error_reporting() == 0) {
-			list($result, $reason) = array(TEST_LOW, "error reporting is off.");
-		}
-		break;
-	case 'extension_dir':
-		if ($v !== NULL && $v !== "") {
-			if (realpath($v) === FALSE) {
-				list($result, $reason) = array(TEST_SKIPPED, "path is invalid or not accessible.");
-			} elseif (is_writable($v) || is_writable_or_chmodable($v)) {
-				list($result, $reason) = array(TEST_HIGH, "path is writable or chmod-able.");
+		case 'expose_php':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_LOW, "PHP is exposed by HTTP headers.");
 			}
-		}
-		break;
-	case 'exit_on_timeout':
-		if (!isset($_SERVER["SERVER_SOFTWARE"]) || strncmp($_SERVER["SERVER_SOFTWARE"], "Apache/1", strlen("Apache/1")) !== 0) {
-			list($result, $reason) = array(TEST_SKIPPED, "only relevant for Apache 1.");
-		} elseif ($v != "1") {
-			list($result, $reason) = array(TEST_LOW, "not enabled.");
-		}
-		break;
-	case 'filter.default':
-		if ($v !== "unsafe_raw") {
-			list($result, $reason) = array(TEST_MAYBE, "global input filter is set.");
-		}
-		break;
-	case 'highlight.bg':
-	case 'highlight.comment':
-	case 'highlight.default':
-	case 'highlight.html':
-	case 'highlight.keyword':
-	case 'highlight.string':
-		if (extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v) || strlen($v) > 7 || strpos($v, '"') !== FALSE) {
-			list($result, $reason) = array(TEST_MEDIUM, "suspicious color value.");
-			$recommendation = $helptext['highlight.*'];
-		}
-		break;
-	case 'iconv.internal_encoding':
-	case 'iconv.input_encoding':
-	case 'iconv.output_encoding':
-		if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6) {
-			if ($v !== "") {
-				list($result, $reason) = array(TEST_COMMENT, "not empty.");
-				$recommendation = $helptext['iconv.internal_encoding!=empty'];
+			break;
+		case 'max_execution_time':
+			if (intval($v) == 0) {
+				list($result, $reason) = array(TEST_MEDIUM, "Execution time is not limited.");
+			} elseif (intval($v) >= 300) {
+				list($result, $reason) = array(TEST_LOW, "Execution time limit is rather high.");
 			}
-		} else {
-			list($result, $reason) = array(TEST_SKIPPED, "not PHP >=5.6");
-		}
-		break;
-	case 'asp_tags':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
-		}
-		break;
-	
-	/* ===== Suhosin ===== */
-	case 'suhosin.simulation':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_MAYBE, "Suhosin is in simulation mode.");
-		}
-		break;
-	case 'suhosin.log.syslog':
-		if ($v === NULL || $v === "" || $v == "0") {
-			// emty string can be the default value or explicitly unset. -> assume unset.
-			list($result, $reason) = array(TEST_COMMENT, "Suhosin doesn't log to syslog.");
-		}
-		break;
-	case 'suhosin.log.phpscript':
-		if ($v !== NULL && $v != "0" && ini_get('suhosin.log.phpscript.name') != "") {
-			list($result, $reason) = array(TEST_COMMENT, "PHP-script for logging.");
-		}
-		break;
-	case 'suhosin.executor.max_depth':
-		if (intval($v) == 0) {
-			list($result, $reason) = array(TEST_LOW, "stack depth not limited.");
-		}
-		break;
-	case 'suhosin.executor.include.max_traversal':
-		if (intval($v) == 0) {
-			list($result, $reason) = array(TEST_LOW, "path traversal (include) not limited.");
-		}
-		break;
-	case 'suhosin.cookie.cryptkey':
-	case 'suhosin.session.cryptkey':
-		$tmp = explode('.', $k);
-		if (ini_get('suhosin.'. $tmp[1] . '.encrypt')) {
+			break;
+		case 'max_input_time':
+			if ($v == "-1") {
+				list($result, $reason) = array(TEST_MAYBE, "Input parsing time not limited.");
+			}
+			break;
+		case 'max_input_nesting_level':
+			if (intval($v) > 128) {
+				list($result, $reason) = array(TEST_MEDIUM, "Input nesting level extremely high.");
+			} elseif (intval($v) > 64) {
+				list($result, $reason) = array(TEST_MAYBE, "Input nesting level higher than usual.");
+			}
+			break;
+		case 'memory_limit':
+			$v = ini_atol($v);
+			if ($v < 0) {
+				list($result, $reason) = array(TEST_HIGH, "Memory limit deactivated.");
+			} elseif (ini_atol($v) >= 128*1024*1024) { // default value
+				list($result, $reason) = array(TEST_MAYBE, "Memory limit is 128M or more.");
+			}
+			break;
+		case 'post_max_size':
+			$tmp = ini_atol(ini_get('memory_limit'));
+			$v = ini_atol($v);
+			if ($tmp < 0) {
+				if ($v >= ini_atol('2G')) {
+					list($result, $reason) = array(TEST_MAYBE, "post_max_size is >= 2G.");
+				}
+				break;
+			}
+			if ($v > $tmp) {
+				list($result, $reason) = array(TEST_HIGH, "post_max_size is greater than memory_limit.");
+				$recommendation = $helptext['post_max_size>memory_limit'];
+			}
+			break;
+		case 'upload_max_filesize':
+			if ($v === "2M") {
+				list($result, $reason) = array(TEST_COMMENT, "default value.");
+			} elseif (ini_atol($v) >= ini_atol("2G")) {
+				list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
+			}
+			break;
+		case 'allow_url_fopen':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_HIGH, "fopen() is allowed to open URLs.");
+			}
+			break;
+		case 'allow_url_include':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_HIGH, "include/require() can include URLs.");
+			}
+			break;
+		case 'magic_quotes_gpc':
+			if (get_magic_quotes_gpc()) {
+				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+				$recommendation = $helptext['magic_quotes'];
+			}
+			break;
+		case 'magic_quotes_runtime':
+			if (get_magic_quotes_runtime()) {
+				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+				$recommendation = $helptext['magic_quotes'];
+			}
+			break;
+		case 'magic_quotes_sybase':
+			if ($v != "0") {
+				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+				$recommendation = $helptext['magic_quotes'];
+			}
+			break;
+		case 'enable_dl':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_HIGH, "PHP can load extensions during runtime.");
+			}
+			break;
+		case 'disable_functions':
+			$v = ini_list($v);
+			if (!$v) {
+				list($result, $reason) = array(TEST_MEDIUM, "no functions disabled.");
+			}
+			break;
+		case 'disable_classes':
+			$v = ini_list($v);
+			if (!$v) {
+				list($result, $reason) = array(TEST_MEDIUM, "no classes disabled.");
+			}
+			break;
+		case 'request_order':
+			$v = strtoupper($v);
+			if ($v === "GP") {break;} // ok
+			if (strstr($v, 'C') !== FALSE) {
+				list($result, $reason) = array(TEST_MAYBE, "cookie values in $_REQUEST.");
+			}
+			if (strstr(str_replace('C', $v, ''), 'PG') !== FALSE) {
+				list($result, $reason) = array(TEST_LOW, "GET overrides POST in $_REQUEST.");
+			}
+			break;
+		case 'variables_order':
+			if ($v === "GPCS") { break; }
+			if ($v !== "EGPCS") {
+				list($result, $reason) = array(TEST_COMMENT, "custom variables_order.");
+			} else {
+				$result = TEST_OK; // result set includes default helptext
+			}
+			break;
+		case 'auto_globals_jit':
+			$result = TEST_OK;
+			break;
+		case 'register_globals':
+			if ($v !== "" && $v !== "0") {
+				list($result, $reason) = array(TEST_CRITICAL, "register_globals is on.");
+			}
+			break;
+		case 'file_uploads':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MAYBE, "file uploads are allowed.");
+			}
+			break;
+		case 'filter.default':
+			if ($v !== "unsafe_raw") {
+				list($result, $reason) = array(TEST_MAYBE, "default input filter set.");
+			}
+			break;
+		case 'open_basedir':
+			if ($v == "") {
+				list($result, $reason) = array(TEST_LOW, "open_basedir not set.");
+			}
+			break;
+		case 'session.save_path':
+			if ($v == "") {
+				list($result, $reason) = array(TEST_MAYBE, "session save path not set.");
+			}
+			break;
+		case 'session.cookie_httponly':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_MAYBE, "no implicit httpOnly-flag for session cookie.");
+			}
+			break;
+		case 'session.cookie_secure':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_MAYBE, "no implicit secure-flag for session cookie.");
+			}
+			break;
+		case 'session.cookie_lifetime':
+			if ($v == "0") {
+				list($result, $reason) = array(TEST_MAYBE, "no implicit lifetime for session cookie.");
+			}
+			break;
+		case 'session.referer_check':
 			if ($v === "") {
-				list($result, $reason) = array(TEST_HIGH, "encryption used, but key not set.");
-				$recommendation = $helptext['suhosin.*.cryptkey'];
-			} elseif (strlen($v) < 16) {
-				list($result, $reason) = array(TEST_MEDIUM, "key is very short.");
-				$recommendation = $helptext['suhosin.*.cryptkey'];
+				list($result, $reason) = array(TEST_COMMENT, "referer check not activated.");
 			}
-		}
-		break;
-	case 'suhosin.cookie.encrypt':
-		if ($v == "1") {
-			list($result, $reason) = array(TEST_COMMENT, "cookie encryption on.");
-			$recommendation = $helptext['suhosin.cookie.encrypt=on'];
-		} else {
-			list($result, $reason) = array(TEST_MEDIUM, "cookie encryption off.");
-			$recommendation = $helptext['suhosin.cookie.encrypt=off'];
-		}
-		break;
-	case 'suhosin.cookie.disallow_nul':
-	case 'suhosin.get.disallow_nul':
-	case 'suhosin.post.disallow_nul':
-	case 'suhosin.request.disallow_nul':
-		if ($v != "1") {
-			list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
-			$recommendation = $helptext['suhosin.*.disallow_nul'];
-		}
-		break;
-	case 'suhosin.get.disallow_ws':
-	case 'suhosin.post.disallow_ws':
-	case 'suhosin.cookie.disallow_ws':
-		if ($v != "1" && ini_get('suhosin.request.disallow_ws') != "1") {
-			list($result, $reason) = array(TEST_LOW, "default value.");
-			$recommendation = $helptext['suhosin.*.disallow_ws'];
-		}
-		break;
-	case 'suhosin.request.max_value_length':
-		if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_value_length')) == 0 ||
-				intval(ini_get('suhosin.post.max_value_length')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_value_length')) == 0)) {
-			list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
-			$recommendation = $helptext['suhosin.*.max_value_length=off'];
-		} elseif (intval($v) == 1000000) { // default value
-			list($result, $reason) = array(TEST_COMMENT, "default value.");
-			$recommendation = $helptext['suhosin.*.max_value_length=default'];
-		}
-		break;
-	case 'suhosin.get.max_value_length':
-	case 'suhosin.post.max_value_length':
-	case 'suhosin.cookie.max_value_length':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_value_length')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
-			$recommendation = $helptext['suhosin.*.max_value_length=off'];
-		} elseif ($k === 'suhosin.get.max_value_length' && intval($v) == 512 ||
-				$k == 'suhosin.post.max_value_length' && intval($v) == 1000000 ||
-				$k == 'suhosin.cookie.max_value_length' && intval($v) == 10000) { // default value
-			list($result, $reason) = array(TEST_COMMENT, "default value.");
-			$recommendation = $helptext['suhosin.*.max_value_length=default'];
-		}
-		break;
-	case 'suhosin.request.max_varname_length':
-		if (intval($v) == 0 &&
-			(intval(ini_get('suhosin.get.max_name_length')) == 0 ||
-			intval(ini_get('suhosin.post.max_name_length')) == 0 ||
-			intval(ini_get('suhosin.cookie.max_name_length')) == 0)) {
+			break;
+		case 'session.use_strict_mode':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_MEDIUM, "strict mode not activated.");
+			}
+			break;
+		case 'session.use_cookies':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_HIGH, "Session ID not stored in cookie.");
+			}
+			break;
+		case 'session.use_only_cookies':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_HIGH, "Session ID not limited to cookie.");
+			}
+			break;
+		case 'always_populate_raw_post_data':
+			if ($v != "0") {
+				list($result, $reason) = array(TEST_COMMENT, "HTTP_RAW_POST_DATA is available.");
+			}
+			break;
+		case 'arg_separator.input':
+		case 'arg_separator.output':
+			if ($v !== "&") {
+				list($result, $reason) = array(TEST_MAYBE, "unusual arg separator.");
+				$recommendation = $helptext['arg_separator'];
+			}
+			break;
+		case 'assert.active':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
+			}
+			break;
+		case 'assert.callback':
+			if (ini_get('assert.active') && $v !== "" && $v !== null) {
+				list($result, $reason) = array(TEST_MEDIUM, "assert callback set.");
+			}
+			break;
+		case 'auto_append_file':
+		case 'auto_prepend_file':
+			if ($v !== NULL && $v !== "") {
+				list($result, $reason) = array(TEST_MAYBE, "$k is set.");
+				$recommendation = $helptext['auto_append_file'];
+			}
+			break;
+		case 'cli.pager':
+			if ($v !== NULL && $v !== "") {
+				list($result, $reason) = array(TEST_MAYBE, "CLI pager set.");
+			}
+			break;
+		case 'cli.prompt':
+			if ($v !== NULL && strlen($v) > 32) {
+				list($result, $reason) = array(TEST_MAYBE, "CLI prompt is rather long (>32).");
+			}
+			break;
+		case 'curl.cainfo':
+			if ($v !== "") {
+				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $is_win && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
+					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO must be an absolute path.");
+				} elseif (!is_readable($v)) {
+					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
+				}
+			
+			}
+			break;
+		case 'docref_root':
+		case 'docref_ext':
+			if ($v !== NULL && $v !== "") {
+				list($result, $reason) = array(TEST_LOW, "docref is set.");
+				$recommendation = $helptext['docref_*'];
+			}
+			break;
+		case 'default_charset':
+			if ($v == "") {
+				list($result, $reason) = array(TEST_HIGH, "default charset not explicitly set.");
+				$recommendation = $helptext['default_charset=empty'];
+			} elseif (stripos($v, "iso-8859") === 0) {
+				list($result, $reason) = array(TEST_MAYBE, "charset without multibyte support.");
+				$recommendation = $helptext['default_charset=iso-8859'];
+			} elseif (strtolower($v) == "utf8") {
+				list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
+				$recommendation = $helptext['default_charset=typo'];
+			} elseif (strtolower($v) == "utf-8") {
+				// ok.
+			} else {
+				list($result, $reason) = array(TEST_COMMENT, "custom charset.");
+				$recommendation = $helptext['default_charset=custom'];
+			}
+			break;
+		case 'default_mimetype':
+			if ($v == "") {
+				list($result, $reason) = array(TEST_HIGH, "default mimetype not set.");
+			}
+			break;
+		case 'default_socket_timeout':
+			if (intval ($v) > 60) {
+				list($result, $reason) = array(TEST_LOW, "default socket timeout rather big.");
+			}
+			break;
+		case 'doc_root':
+			if (!$cfg['is_cgi']) {
+				list($result, $reason) = array(TEST_SKIPPED, "no CGI environment.");
+				break;
+			}
+			if (ini_get('cgi.force_redirect')) {
+				list($result, $reason) = array(TEST_SKIPPED, "cgi.force_redirect is on instead.");
+				break;
+			}
+			if ($v == "") {
+				list($result, $reason) = array(TEST_MEDIUM, "doc_root not set.");
+				$recommendation = $helptext['doc_root=empty'];
+			}
+			break;
+		case 'error_prepend_string':
+		case 'error_append_string':
+			if ($v !== NULL && $v !== "") {
+				list($result, $reason) = array(TEST_MAYBE, "$k is set.");
+				$recommendation = $helptext['error_append_string'];
+			}
+			break;
+		case 'error_reporting':
+			if (error_reporting() == 0) {
+				list($result, $reason) = array(TEST_LOW, "error reporting is off.");
+			}
+			break;
+		case 'extension_dir':
+			if ($v !== NULL && $v !== "") {
+				if (realpath($v) === FALSE) {
+					list($result, $reason) = array(TEST_SKIPPED, "path is invalid or not accessible.");
+				} elseif (is_writable($v) || is_writable_or_chmodable($v)) {
+					list($result, $reason) = array(TEST_HIGH, "path is writable or chmod-able.");
+				}
+			}
+			break;
+		case 'exit_on_timeout':
+			if (!isset($_SERVER["SERVER_SOFTWARE"]) || strncmp($_SERVER["SERVER_SOFTWARE"], "Apache/1", strlen("Apache/1")) !== 0) {
+				list($result, $reason) = array(TEST_SKIPPED, "only relevant for Apache 1.");
+			} elseif ($v != "1") {
+				list($result, $reason) = array(TEST_LOW, "not enabled.");
+			}
+			break;
+		case 'filter.default':
+			if ($v !== "unsafe_raw") {
+				list($result, $reason) = array(TEST_MAYBE, "global input filter is set.");
+			}
+			break;
+		case 'highlight.bg':
+		case 'highlight.comment':
+		case 'highlight.default':
+		case 'highlight.html':
+		case 'highlight.keyword':
+		case 'highlight.string':
+			if (extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v) || strlen($v) > 7 || strpos($v, '"') !== FALSE) {
+				list($result, $reason) = array(TEST_MEDIUM, "suspicious color value.");
+				$recommendation = $helptext['highlight.*'];
+			}
+			break;
+		case 'iconv.internal_encoding':
+		case 'iconv.input_encoding':
+		case 'iconv.output_encoding':
+			if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6) {
+				if ($v !== "") {
+					list($result, $reason) = array(TEST_COMMENT, "not empty.");
+					$recommendation = $helptext['iconv.internal_encoding!=empty'];
+				}
+			} else {
+				list($result, $reason) = array(TEST_SKIPPED, "not PHP >=5.6");
+			}
+			break;
+		case 'asp_tags':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
+			}
+			break;
+	
+		/* ===== Suhosin ===== */
+		case 'suhosin.simulation':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_MAYBE, "Suhosin is in simulation mode.");
+			}
+			break;
+		case 'suhosin.log.syslog':
+			if ($v === NULL || $v === "" || $v == "0") {
+				// emty string can be the default value or explicitly unset. -> assume unset.
+				list($result, $reason) = array(TEST_COMMENT, "Suhosin doesn't log to syslog.");
+			}
+			break;
+		case 'suhosin.log.phpscript':
+			if ($v !== NULL && $v != "0" && ini_get('suhosin.log.phpscript.name') != "") {
+				list($result, $reason) = array(TEST_COMMENT, "PHP-script for logging.");
+			}
+			break;
+		case 'suhosin.executor.max_depth':
+			if (intval($v) == 0) {
+				list($result, $reason) = array(TEST_LOW, "stack depth not limited.");
+			}
+			break;
+		case 'suhosin.executor.include.max_traversal':
+			if (intval($v) == 0) {
+				list($result, $reason) = array(TEST_LOW, "path traversal (include) not limited.");
+			}
+			break;
+		case 'suhosin.cookie.cryptkey':
+		case 'suhosin.session.cryptkey':
+			$tmp = explode('.', $k);
+			if (ini_get('suhosin.'. $tmp[1] . '.encrypt')) {
+				if ($v === "") {
+					list($result, $reason) = array(TEST_HIGH, "encryption used, but key not set.");
+					$recommendation = $helptext['suhosin.*.cryptkey'];
+				} elseif (strlen($v) < 16) {
+					list($result, $reason) = array(TEST_MEDIUM, "key is very short.");
+					$recommendation = $helptext['suhosin.*.cryptkey'];
+				}
+			}
+			break;
+		case 'suhosin.cookie.encrypt':
+			if ($v == "1") {
+				list($result, $reason) = array(TEST_COMMENT, "cookie encryption on.");
+				$recommendation = $helptext['suhosin.cookie.encrypt=on'];
+			} else {
+				list($result, $reason) = array(TEST_MEDIUM, "cookie encryption off.");
+				$recommendation = $helptext['suhosin.cookie.encrypt=off'];
+			}
+			break;
+		case 'suhosin.cookie.disallow_nul':
+		case 'suhosin.get.disallow_nul':
+		case 'suhosin.post.disallow_nul':
+		case 'suhosin.request.disallow_nul':
+			if ($v != "1") {
+				list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
+				$recommendation = $helptext['suhosin.*.disallow_nul'];
+			}
+			break;
+		case 'suhosin.get.disallow_ws':
+		case 'suhosin.post.disallow_ws':
+		case 'suhosin.cookie.disallow_ws':
+			if ($v != "1" && ini_get('suhosin.request.disallow_ws') != "1") {
+				list($result, $reason) = array(TEST_LOW, "default value.");
+				$recommendation = $helptext['suhosin.*.disallow_ws'];
+			}
+			break;
+		case 'suhosin.request.max_value_length':
+			if (intval($v) == 0 &&
+					(intval(ini_get('suhosin.get.max_value_length')) == 0 ||
+					intval(ini_get('suhosin.post.max_value_length')) == 0 ||
+					intval(ini_get('suhosin.cookie.max_value_length')) == 0)) {
+				list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
+				$recommendation = $helptext['suhosin.*.max_value_length=off'];
+			} elseif (intval($v) == 1000000) { // default value
+				list($result, $reason) = array(TEST_COMMENT, "default value.");
+				$recommendation = $helptext['suhosin.*.max_value_length=default'];
+			}
+			break;
+		case 'suhosin.get.max_value_length':
+		case 'suhosin.post.max_value_length':
+		case 'suhosin.cookie.max_value_length':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_value_length')) == 0) {
+				list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
+				$recommendation = $helptext['suhosin.*.max_value_length=off'];
+			} elseif ($k === 'suhosin.get.max_value_length' && intval($v) == 512 ||
+					$k == 'suhosin.post.max_value_length' && intval($v) == 1000000 ||
+					$k == 'suhosin.cookie.max_value_length' && intval($v) == 10000) { // default value
+				list($result, $reason) = array(TEST_COMMENT, "default value.");
+				$recommendation = $helptext['suhosin.*.max_value_length=default'];
+			}
+			break;
+		case 'suhosin.request.max_varname_length':
+			if (intval($v) == 0 &&
+				(intval(ini_get('suhosin.get.max_name_length')) == 0 ||
+				intval(ini_get('suhosin.post.max_name_length')) == 0 ||
+				intval(ini_get('suhosin.cookie.max_name_length')) == 0)) {
+					list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
+					$recommendation = $helptext['suhosin.*.max_name_length=off'];
+				}
+			break;	
+		case 'suhosin.get.max_name_length':
+		case 'suhosin.post.max_name_length':
+		case 'suhosin.cookie.max_name_length':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_varname_length')) == 0) {
 				list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
 				$recommendation = $helptext['suhosin.*.max_name_length=off'];
 			}
-		break;	
-	case 'suhosin.get.max_name_length':
-	case 'suhosin.post.max_name_length':
-	case 'suhosin.cookie.max_name_length':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_varname_length')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
-			$recommendation = $helptext['suhosin.*.max_name_length=off'];
-		}
-		break;
-	case 'suhosin.request.max_array_depth':
-		if (intval($v) == 0 &&
-			(intval(ini_get('suhosin.get.max_array_depth')) == 0 ||
-			intval(ini_get('suhosin.post.max_array_depth')) == 0 ||
-			intval(ini_get('suhosin.cookie.max_array_depth')) == 0)) {
+			break;
+		case 'suhosin.request.max_array_depth':
+			if (intval($v) == 0 &&
+				(intval(ini_get('suhosin.get.max_array_depth')) == 0 ||
+				intval(ini_get('suhosin.post.max_array_depth')) == 0 ||
+				intval(ini_get('suhosin.cookie.max_array_depth')) == 0)) {
+					list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
+					$recommendation = $helptext['suhosin.*.max_array_depth=off'];
+				}
+			break;
+		case 'suhosin.get.max_array_depth':
+		case 'suhosin.post.max_array_depth':
+		case 'suhosin.cookie.max_array_depth':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_depth')) == 0) {
 				list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
 				$recommendation = $helptext['suhosin.*.max_array_depth=off'];
 			}
-		break;
-	case 'suhosin.get.max_array_depth':
-	case 'suhosin.post.max_array_depth':
-	case 'suhosin.cookie.max_array_depth':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_depth')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
-			$recommendation = $helptext['suhosin.*.max_array_depth=off'];
-		}
-		break;
-	case 'suhosin.request.max_array_index_length':
-		if (intval($v) == 0 &&
-			(intval(ini_get('suhosin.get.max_array_index_length')) == 0 ||
-			intval(ini_get('suhosin.post.max_array_index_length')) == 0 ||
-			intval(ini_get('suhosin.cookie.max_array_index_length')) == 0)) {
+			break;
+		case 'suhosin.request.max_array_index_length':
+			if (intval($v) == 0 &&
+				(intval(ini_get('suhosin.get.max_array_index_length')) == 0 ||
+				intval(ini_get('suhosin.post.max_array_index_length')) == 0 ||
+				intval(ini_get('suhosin.cookie.max_array_index_length')) == 0)) {
+					list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
+					$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
+				}
+			break;
+		case 'suhosin.get.max_array_index_length':
+		case 'suhosin.post.max_array_index_length':
+		case 'suhosin.cookie.max_array_index_length':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_index_length')) == 0) {
 				list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
 				$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
 			}
-		break;
-	case 'suhosin.get.max_array_index_length':
-	case 'suhosin.post.max_array_index_length':
-	case 'suhosin.cookie.max_array_index_length':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_index_length')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
-			$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
-		}
-		break;
-	case 'suhosin.request.max_totalname_length':
-		if (intval($v) == 0 &&
-			(intval(ini_get('suhosin.get.max_totalname_length')) == 0 ||
-			intval(ini_get('suhosin.post.max_totalname_length')) == 0 ||
-			intval(ini_get('suhosin.cookie.max_totalname_length')) == 0)) {
+			break;
+		case 'suhosin.request.max_totalname_length':
+			if (intval($v) == 0 &&
+				(intval(ini_get('suhosin.get.max_totalname_length')) == 0 ||
+				intval(ini_get('suhosin.post.max_totalname_length')) == 0 ||
+				intval(ini_get('suhosin.cookie.max_totalname_length')) == 0)) {
+					list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
+					$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
+				}
+			break;
+		case 'suhosin.get.max_totalname_length':
+		case 'suhosin.post.max_totalname_length':
+		case 'suhosin.cookie.max_totalname_length':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_totalname_length')) == 0) {
 				list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
 				$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
 			}
-		break;
-	case 'suhosin.get.max_totalname_length':
-	case 'suhosin.post.max_totalname_length':
-	case 'suhosin.cookie.max_totalname_length':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_totalname_length')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
-			$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
-		}
-		break;
-	case 'suhosin.request.max_vars':
-		if (intval($v) == 0 &&
-			(intval(ini_get('suhosin.get.max_vars')) == 0 ||
-			intval(ini_get('suhosin.post.max_vars')) == 0 ||
-			intval(ini_get('suhosin.cookie.max_vars')) == 0)) {
-				list($result, $reason) = array(TEST_HIGH, "number of request varialbes not limited.");
+			break;
+		case 'suhosin.request.max_vars':
+			if (intval($v) == 0 &&
+				(intval(ini_get('suhosin.get.max_vars')) == 0 ||
+				intval(ini_get('suhosin.post.max_vars')) == 0 ||
+				intval(ini_get('suhosin.cookie.max_vars')) == 0)) {
+					list($result, $reason) = array(TEST_HIGH, "number of request varialbes not limited.");
+					$recommendation = $helptext['suhosin.*.max_vars=off'];
+				}
+			break;
+		case 'suhosin.get.max_vars':
+		case 'suhosin.post.max_vars':
+		case 'suhosin.cookie.max_vars':
+			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_vars')) == 0) {
+				list($result, $reason) = array(TEST_MEDIUM, "number of variables not limited.");
 				$recommendation = $helptext['suhosin.*.max_vars=off'];
 			}
-		break;
-	case 'suhosin.get.max_vars':
-	case 'suhosin.post.max_vars':
-	case 'suhosin.cookie.max_vars':
-		if (intval($v) == 0 && intval(ini_get('suhosin.request.max_vars')) == 0) {
-			list($result, $reason) = array(TEST_MEDIUM, "number of variables not limited.");
-			$recommendation = $helptext['suhosin.*.max_vars=off'];
-		}
-		break;
+			break;
 		
 
-	case 'suhosin.log.script.name':
-	case 'suhosin.log.phpscript.name':
-		if ($v !== "") {
-			if (is_writable($v)) {
-				list($result, $reason) = array(TEST_HIGH, "logging script is writable.");
-				$recommendation = $helptext['suhosin.log.script.name'];
-			} elseif (is_writable_or_chmodable($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "logging script is potentially writable.");
-				$recommendation = $helptext['suhosin.log.script.name/chmod'];
+		case 'suhosin.log.script.name':
+		case 'suhosin.log.phpscript.name':
+		case 'suhosin.upload.verification_script':
+			if ($v !== "") {
+				if (is_writable($v)) {
+					list($result, $reason) = array(TEST_HIGH, "script is writable.");
+					$recommendation = $helptext['suhosin.*script/writable'];
+				} elseif (is_writable_or_chmodable($v)) {
+					list($result, $reason) = array(TEST_HIGH, "script is potentially writable.");
+					$recommendation = $helptext['suhosin.*script/chmod'];
+				}
 			}
+			break;
+	
+		/* ===== known, but extra check below. ===== */
+		case 'error_log':
+		case 'include_path':
+			// silently ignore this option
+			$ignore = 1;
+			break;
+	
+		/* ===== known, but probably not security relevant ===== */
+		case 'precision':
+		case 'assert.bail':
+		case 'assert.quiet_eval':
+		case 'assert.warning':
+		case 'auto_detect_line_endings':
+		case 'bcmath.scale':
+		case 'browscap':
+		case 'date.default_latitude':
+		case 'date.default_longitude':
+		case 'date.sunrise_zenith':
+		case 'date.sunset_zenith':
+		case 'date.timezone':
+		case 'dba.default_handler':
+		case 'enable_post_data_reading':
+		case 'engine': // can only be 1 here anyway.
+		case 'exif.decode_jis_intel':
+		case 'exif.decode_jis_motorola':
+		case 'exif.decode_unicode_intel':
+		case 'exif.decode_unicode_motorola':
+		case 'exif.encode_jis':
+		case 'exif.encode_unicode':
+		case 'filter.default_flags':
+		case 'from':
+		case 'gd.jpeg_ignore_warning':
+		case 'html_errors':
+		case 'ignore_repeated_errors':
+		case 'ignore_repeated_source':
+		case 'ignore_user_abort':
+		case 'implicit_flush':
+		case 'suhosin.apc_bug_workaround':
+		case 'suhosin.cookie.checkraddr':
+		case 'suhosin.cookie.cryptdocroot':
+		case 'suhosin.cookie.cryptlist':
+		case 'suhosin.cookie.cryptraddr':
+		case 'suhosin.cookie.cryptua':
+		case 'suhosin.log.syslog.facility':
+		case 'suhosin.log.syslog.priority':
+		case 'suhosin.log.sapi':
+		case 'suhosin.log.script':
+		case 'suhosin.log.use-x-forwarded-for':
+		case 'suhosin.request.disallow_ws':
+			list($result, $reason) = array(TEST_OK, "any value is ok");
+			break;
+	
+		/* ===== unknown / ignored ===== */
+		default:
+			list($result, $reason) = array(TEST_UNKNOWN, "unknown / not checked.");
 		}
-		break;
 	
-	/* ===== known, but extra check below. ===== */
-	case 'error_log':
-	case 'include_path':
-		// silently ignore this option
-		$ignore = 1;
-		break;
+		if ($ignore) { continue; }
 	
-	/* ===== known, but probably not security relevant ===== */
-	case 'precision':
-	case 'assert.bail':
-	case 'assert.quiet_eval':
-	case 'assert.warning':
-	case 'auto_detect_line_endings':
-	case 'bcmath.scale':
-	case 'browscap':
-	case 'date.default_latitude':
-	case 'date.default_longitude':
-	case 'date.sunrise_zenith':
-	case 'date.sunset_zenith':
-	case 'date.timezone':
-	case 'dba.default_handler':
-	case 'enable_post_data_reading':
-	case 'engine': // can only be 1 here anyway.
-	case 'exif.decode_jis_intel':
-	case 'exif.decode_jis_motorola':
-	case 'exif.decode_unicode_intel':
-	case 'exif.decode_unicode_motorola':
-	case 'exif.encode_jis':
-	case 'exif.encode_unicode':
-	case 'filter.default_flags':
-	case 'from':
-	case 'gd.jpeg_ignore_warning':
-	case 'html_errors':
-	case 'ignore_repeated_errors':
-	case 'ignore_repeated_source':
-	case 'ignore_user_abort':
-	case 'implicit_flush':
-	case 'suhosin.apc_bug_workaround':
-	case 'suhosin.cookie.checkraddr':
-	case 'suhosin.cookie.cryptdocroot':
-	case 'suhosin.cookie.cryptlist':
-	case 'suhosin.cookie.cryptraddr':
-	case 'suhosin.cookie.cryptua':
-	case 'suhosin.log.syslog.facility':
-	case 'suhosin.log.syslog.priority':
-	case 'suhosin.log.sapi':
-	case 'suhosin.log.script':
-	case 'suhosin.log.use-x-forwarded-for':
-	case 'suhosin.request.disallow_ws':
-		list($result, $reason) = array(TEST_OK, "any value is ok");
-		break;
-	
-	/* ===== unknown / ignored ===== */
-	default:
-		list($result, $reason) = array(TEST_UNKNOWN, "unknown / not checked.");
-	}
-	
-	if ($ignore) { continue; }
-	
-	if ($result === NULL) {
-		tres($meta, TEST_OK);
-	} elseif ($result === TEST_SKIPPED) {
-		tres($meta, $result, $reason);
-	} else {
-		tres($meta, $result, $reason, $recommendation);
+		if ($result === NULL) {
+			tres($meta, TEST_OK);
+		} elseif ($result === TEST_SKIPPED) {
+			tres($meta, $result, $reason);
+		} else {
+			tres($meta, $result, $reason, $recommendation);
+		}
 	}
 }
+test_all_ini_entries();
 
 // --- other checks ---
 
