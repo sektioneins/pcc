@@ -663,10 +663,10 @@ foreach (ini_get_all() as $k => $v) {
 		}
 		break;
 	case 'asp_tags':
-	if ($v == "1") {
-		list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
-	}
-	break;
+		if ($v == "1") {
+			list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
+		}
+		break;
 	
 	/* ===== Suhosin ===== */
 	case 'suhosin.simulation':
