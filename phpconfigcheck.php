@@ -930,52 +930,75 @@ foreach (ini_get_all() as $k => $v) {
 // --- other checks ---
 
 // old version of this script?
-if (version_compare(PHP_VERSION, '5.1.0') >= 0) {
-	date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
+function test_pcc_need_update()
+{
+	global $cfg, $pcc_date, $pcc_version;
+	
+	if (version_compare(PHP_VERSION, '5.1.0') >= 0) {
+		date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
+	}
+	if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
+		if (time() > strtotime($pcc_date) + (24*3600*60)) { $cfg['need_update'] = 1; }
+	} elseif (time() > strtotime($pcc_date) + (24*3600*180)) { $cfg['need_update'] = 1; }
+	
 }
-if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
-	if (time() > strtotime($pcc_date) + (24*3600*60)) { $cfg['need_update'] = 1; }
-} elseif (time() > strtotime($pcc_date) + (24*3600*180)) { $cfg['need_update'] = 1; }
+test_pcc_need_update();
 
 
 // old php version?
-$meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.4");
-if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
-	tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-} else {
-	tres($meta, TEST_HIGH, "PHP version is older than 5.4",
-		"Please upgrade PHP as soon as possible. " .
-		"Old versions of PHP are not maintained anymore and may contain security flaws.");
+function test_old_php_version()
+{
+	$meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.5");
+	if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
+	} else {
+		tres($meta, TEST_HIGH, "PHP version is older than 5.5",
+			"Please upgrade PHP as soon as possible. " .
+			"Old versions of PHP are not maintained anymore and may contain security flaws.");
+	}
 }
+test_old_php_version();
 
 
 // suhosin installed?
-$meta = tdesc("Suhosin", "Checks whether the Suhosin-Extension is loaded");
-if (extension_loaded("suhosin")) {
-	tres($meta, TEST_OK);
-} else {
-	tres($meta, TEST_MAYBE, "Suhosin extension is not loaded", "Suhosin is an advanced protection system for PHP. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see http://suhosin.org/");
-}
-
-
-// error_log outside document root?
-$meta = tdesc("Error log in document root", "Checks if error_log path is in the current document root");
-if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
-elseif (ini_get('error_log') === "") { tres($meta, TEST_SKIPPED, "error_log not set."); }
-elseif (ini_get('error_log') === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
-elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
-else {
-	$error_log_realpath = realpath(ini_get('error_log'));
-	$document_root_realpath = realpath($_SERVER['DOCUMENT_ROOT']);
-	if ($error_log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
-		$error_log_realpath = realpath(dirname(ini_get('error_log')));
+function test_suhosin_installed()
+{
+	$meta = tdesc("Suhosin", "Checks whether the Suhosin-Extension is loaded");
+	if (extension_loaded("suhosin")) {
+		tres($meta, TEST_OK);
+	} else if (defined('HHVM_VERSION')) {
+		tres($meta, TEST_SKIPPED, "Suhosin is not available for HHVM.");
+	} else {
+		tres($meta, TEST_MAYBE, "Suhosin extension is not loaded", "Suhosin is an advanced protection system for PHP. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see http://suhosin.org/");
 	}
-	if ($error_log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "error_log invalid or relative path."); }
-	elseif ($document_root_realpath === FALSE) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT invalid or relative path."); }
-	elseif (strncmp($error_log_realpath . DIRECTORY_SEPARATOR, $document_root_realpath . DIRECTORY_SEPARATOR, strlen($document_root_realpath)+1) === 0) {
-		tres($meta, TEST_HIGH, "error_log in DOCUMENT_ROOT.", "The error logfile is located inside the document root directory and may be accessible publicly. The error_log should always point to a file outside the document root.");
-	} else { tres($meta, TEST_OK, "error_log outside of DOCUMENT_ROOT."); }
 }
+test_suhosin_installed();
+
+
+// error_log inside document root?
+function test_error_log_in_document_root()
+{
+	global $cfg;
+	
+	$meta = tdesc("Error log in document root", "Checks if error_log path is in the current document root");
+	if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
+	elseif (ini_get('error_log') === "") { tres($meta, TEST_SKIPPED, "error_log not set."); }
+	elseif (ini_get('error_log') === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
+	elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
+	else {
+		$error_log_realpath = realpath(ini_get('error_log'));
+		$document_root_realpath = realpath($_SERVER['DOCUMENT_ROOT']);
+		if ($error_log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
+			$error_log_realpath = realpath(dirname(ini_get('error_log')));
+		}
+		if ($error_log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "error_log invalid or relative path."); }
+		elseif ($document_root_realpath === FALSE) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT invalid or relative path."); }
+		elseif (strncmp($error_log_realpath . DIRECTORY_SEPARATOR, $document_root_realpath . DIRECTORY_SEPARATOR, strlen($document_root_realpath)+1) === 0) {
+			tres($meta, TEST_HIGH, "error_log in DOCUMENT_ROOT.", "The error logfile is located inside the document root directory and may be accessible publicly. The error_log should always point to a file outside the document root.");
+		} else { tres($meta, TEST_OK, "error_log outside of DOCUMENT_ROOT."); }
+	}
+}
+test_error_log_in_document_root();
 
 
 // writable document root?
