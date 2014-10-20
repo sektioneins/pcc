@@ -18,7 +18,7 @@ Idea
 Usage
 -----
 
-* **CLI**: Simply call `php phpconfigcheck.php`. That's it.
+* **CLI**: Simply call `php phpconfigcheck.php`. That's it. Add `-a` to see hidden results as well and `-h` for HTML output.
 
 * **WEB**: Copy this script to any directory accessible by your webserver, e.g. your document root. See also 'Safeguards' below.
 
@@ -56,3 +56,4 @@ Notes
 * For copyright and license information, see phpconfigcheck.php and the LICENSE file.
 * Issues, comments, enhancements? Please use the Github issue tracker:
   https://github.com/sektioneins/pcc/issues
+
