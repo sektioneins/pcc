@@ -1002,15 +1002,45 @@ test_error_log_in_document_root();
 
 
 // writable document root?
-$meta = tdesc("Writable document root", "Checks if the current document root is writable");
-if (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
-elseif (is_writable($_SERVER['DOCUMENT_ROOT'])) {
-	tres($meta, TEST_HIGH, "document root is writable.", "Making the document root writable may give an attacker the advantage of persisting an exploit. It is probably best to restrict write access to the document root and its subdirectories. Temporary files your application may need to write can be safely stored outside the document root.");
-} elseif (is_writable_or_chmodable($_SERVER['DOCUMENT_ROOT'])) {
-	tres($meta, TEST_MEDIUM, "document root is potentially writable.", "The document root's access permissions prevent write access, but the current user has the right to change these permissions. Please change the directory's owner.");
-} else {
-	tres($meta, TEST_OK, "document root not writable.");
+function test_writable_document_root()
+{
+	$meta = tdesc("Writable document root", "Checks if the current document root is writable");
+	if (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
+	elseif (is_writable($_SERVER['DOCUMENT_ROOT'])) {
+		tres($meta, TEST_HIGH, "document root is writable.", "Making the document root writable may give an attacker the advantage of persisting an exploit. It is probably best to restrict write access to the document root and its subdirectories. Temporary files your application may need to write can be safely stored outside the document root.");
+	} elseif (is_writable_or_chmodable($_SERVER['DOCUMENT_ROOT'])) {
+		tres($meta, TEST_MEDIUM, "document root is potentially writable.", "The document root's access permissions prevent write access, but the current user has the right to change these permissions. Please change the directory's owner.");
+	} else {
+		tres($meta, TEST_OK, "document root not writable.");
+	}
 }
+test_writable_document_root();
+
+
+// include_path writable?
+function test_include_path_writable()
+{
+	$meta = tdesc("Writable include_path", "Checks if at least one directory listed in the include_path is writable");
+	$result = 0;
+	$checked = 0;
+	foreach (explode(':', ini_get('include_path')) as $dir) {
+		if ($dir === "") { continue; }
+		$checked++;
+		$absdir = realpath($dir);
+		if ($absdir === FALSE) { continue; } // path does not exist? -> ignore
+		if (is_writable($absdir)) {
+			tres($meta, TEST_HIGH, "The directory '" . $dir . "' is writable.", "An attacker may try to place a file here.");
+			$result = 1;
+		} else if (is_writable_or_chmodable($absdir)) {
+			tres($meta, TEST_HIGH, "The directory '" . $dir . "' is potentially writable.", "The current user has the right to change its permissions.");
+			$result = 1;
+		}
+	}
+	if (!$result) {
+		tres($meta, TEST_OK, "Checked $checked directories.");
+	}
+}
+test_include_path_writable();
 
 
 /*****************************************************************************/
