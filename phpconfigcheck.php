@@ -1068,11 +1068,12 @@ if ($cfg['output_type'] == "text") {
 } elseif ($cfg['output_type'] == "html") {
 	function e($str) { return htmlentities($str, ENT_QUOTES); }
 
-
 ?>
-<html>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head><title><?php echo $pcc_name; ?></title>
-<style>
+<meta charset="utf-8"/>
+<style type="text/css">
 body {
 	background-color: #fe9;
 	color: #111;
@@ -1120,7 +1121,7 @@ img {
 <div class="c">
 	<table class="t t1">
 		<tr><td>
-			<a href="https://sektioneins.de/"><img src="<?php echo $cfg['s1_logo']; ?>" width="120px"/></a>
+			<a href="https://sektioneins.de/"><img src="<?php echo $cfg['s1_logo']; ?>" width="120" alt="SektionEins" /></a>
 			<?php echo $pcc_name;?><br/>Version <?php echo $pcc_version;?><br/><?php echo $pcc_copy; ?>
 		</td></tr>
 	</table>
