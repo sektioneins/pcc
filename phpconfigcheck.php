@@ -281,6 +281,9 @@ function test_all_ini_entries()
 		'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
 		'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
 		'asp_tags' => "ASP-Style tags are quite uncommon for PHP. If you don't actually require your PHP-code to start with <%, this options should be deactivated.",
+		'ldap.max_links' => "In order to prevent denial-of-service attacks this options should be set to the lowest number possible. If LDAP is not needed at all, the LDAP extension should not be loaded in the first place.",
+		'log_errors_max_len' => "An attacker may try to exhaust ressources such as disk space and RAM. If possible, limit this value to a reasonable minimum, e.g. 1024.",
+		'mail.add_x_header' => "Information Disclosure: When sending e-mails, a header 'X-PHP-Originating-Script' contains the filename of the originating script. In production this feature should be disabled.",
 	
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -669,7 +672,31 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
 			}
 			break;
-	
+		case 'ldap.max_links':
+			if (intval($v) == -1) {
+				list($result, $reason) = array(TEST_MAYBE, "Number of LDAP connections not limited.");
+			} else if (intval($v) > 5) {
+				list($result, $reason) = array(TEST_MAYBE, "More than 5 LDAP connections allowed.");
+			}
+			break;
+		case 'log_errors_max_len':
+			$v = ini_atol($v);
+			if ($v == 0 || $v > 4096) {
+				list($result, $reason) = array(TEST_MEDIUM, "Value rather big or not limited.");
+			}
+			break;
+		case 'mail.add_x_header':
+			if ($v) {
+				list($result, $reason) = array(TEST_MEDIUM, "Filename exposed.");
+			}
+			break;
+		case 'mail.force_extra_parameters':
+			if ($v) {
+				list($result, $reason) = array(TEST_COMMENT, "not empty.");
+				$recommendation = "just FYI.";
+			}
+			break;
+		
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
 			if ($v == "1") {
