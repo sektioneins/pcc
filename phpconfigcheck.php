@@ -225,6 +225,7 @@ function is_writable_or_chmodable($fn)
 
 function test_all_ini_entries()
 {
+	global $cfg;
 	$helptext = array(
 		"display_errors" => "Error messages can divulge information about the inner workings of an application and may include private information such as Session-ID, personal data, database structures, source code exerpts. It is recommended to log errors, but not to display them on live systems.",
 		'log_errors' => "While it may be a good idea to avoid logging altogether from a privacy point of view, monitoring the error log of an application can lead to detecting attacks, programming and configuration errors.",
