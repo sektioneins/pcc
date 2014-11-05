@@ -285,7 +285,11 @@ function test_all_ini_entries()
 		'ldap.max_links' => "In order to prevent denial-of-service attacks this options should be set to the lowest number possible. If LDAP is not needed at all, the LDAP extension should not be loaded in the first place.",
 		'log_errors_max_len' => "An attacker may try to exhaust ressources such as disk space and RAM. If possible, limit this value to a reasonable minimum, e.g. 1024.",
 		'mail.add_x_header' => "Information Disclosure: When sending e-mails, a header 'X-PHP-Originating-Script' contains the filename of the originating script. In production this feature should be disabled.",
-	
+		'intl.default_locale' => "The ICU default locale is not set explicitly, which forces the usage of ICU's default locale.",
+		'intl.error_level' => "An error induced by an attacker can change the program's control flow and may lead to unexpected side-effects.",
+		'intl.use_exceptions' => "If unhandled, exceptions may have unexpected side-effects. Please make sure potential exceptions are handled correctly when calling intl-functions.",
+		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
+		
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
 		'suhosin.log.syslog' => "Logging to syslog should be used here.",
@@ -305,7 +309,9 @@ function test_all_ini_entries()
 		'suhosin.*.max_totalname_length=off' => "The variable name length should be limited to a reasonable value, e.g. 256.",
 		'suhosin.*.max_vars=off' => "The number of user supplied input variables should be limited. Reasonable values depend on your application and may go up to 100 or 1000.",
 		'suhosin.*script/writable' => "An attacker may try to inject code into the logging/upload script. Better change file permissions to read-only access.",
-		'suhosin.*script/chmod' => "The logging or upload script is not set writable, but the current user has the right to change its access permission. Please change the file's owner."
+		'suhosin.*script/chmod' => "The logging or upload script is not set writable, but the current user has the right to change its access permission. Please change the file's owner.",
+		'debugonly' => "This feature is for debugging only. Please deactivate.",
+		'suhosin.disable.display_errors' => "In PHP enabling display_errors is one of the major causes for information disclosure. For example, an attacker may gather information about the document root, SQL queries, class names, function names, version numbers and in rare cases even login credentials or session IDs. Suhosin is able to deactivate display_errors entirely. You should make use of this feature."
 	);
 
 	// php.ini checks
@@ -697,6 +703,26 @@ function test_all_ini_entries()
 				$recommendation = "just FYI.";
 			}
 			break;
+		case 'intl.default_locale':
+			if ($v == "")  {
+				list($result, $reason) = array(TEST_COMMENT, "ICU default locale not set.");
+			}
+			break;
+		case 'intl.error_level':
+			if (intval($v) | E_ERROR) {
+				list($result, $reason) = array(TEST_MAYBE, "ICU functions fail with error.");
+			}
+			break;
+		case 'intl.use_exceptions':
+			if ($v) {
+				list($result, $reason) = array(TEST_MAYBE, "intl functions throw exceptions.");
+			}
+			break;
+		case 'last_modified':
+			if ($v) {
+				list($result, $reason) = array(TEST_LOW, "is set.");
+			}
+			break;
 		
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
@@ -874,8 +900,6 @@ function test_all_ini_entries()
 				$recommendation = $helptext['suhosin.*.max_vars=off'];
 			}
 			break;
-		
-
 		case 'suhosin.log.script.name':
 		case 'suhosin.log.phpscript.name':
 		case 'suhosin.upload.verification_script':
@@ -889,10 +913,22 @@ function test_all_ini_entries()
 				}
 			}
 			break;
+		case 'suhosin.coredump':
+			if ($v) {
+				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
+				$recommendation = $helptext['debugonly'];
+			}
+			break;
+		case 'suhosin.disable.display_errors':
+			if ($v == "0" || strtolower($v) == "Off") {
+				list($result, $reason) = array(TEST_MEDIUM, "display_errors is not disabled.");
+			}
+			break;
 	
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
+		case 'mail.log':
 			// silently ignore this option
 			$ignore = 1;
 			break;
@@ -933,6 +969,7 @@ function test_all_ini_entries()
 		case 'suhosin.cookie.cryptlist':
 		case 'suhosin.cookie.cryptraddr':
 		case 'suhosin.cookie.cryptua':
+		case 'suhosin.cookie.plainlist':
 		case 'suhosin.log.syslog.facility':
 		case 'suhosin.log.syslog.priority':
 		case 'suhosin.log.sapi':
@@ -1009,29 +1046,30 @@ test_suhosin_installed();
 
 
 // error_log inside document root?
-function test_error_log_in_document_root()
+function test_log_in_document_root($inientry)
 {
 	global $cfg;
 	
-	$meta = tdesc("Error log in document root", "Checks if error_log path is in the current document root");
+	$meta = tdesc("$inientry in document root", "Checks if $inientry path is in the current document root");
 	if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
-	elseif (ini_get('error_log') === "") { tres($meta, TEST_SKIPPED, "error_log not set."); }
-	elseif (ini_get('error_log') === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
+	elseif (ini_get($inientry) === "") { tres($meta, TEST_SKIPPED, "error_log not set."); }
+	elseif ($inientry === 'error_log' && ini_get($inientry) === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
 	elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
 	else {
-		$error_log_realpath = realpath(ini_get('error_log'));
+		$log_realpath = realpath(ini_get($inientry));
 		$document_root_realpath = realpath($_SERVER['DOCUMENT_ROOT']);
-		if ($error_log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
-			$error_log_realpath = realpath(dirname(ini_get('error_log')));
+		if ($log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
+			$log_realpath = realpath(dirname(ini_get($inientry)));
 		}
-		if ($error_log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "error_log invalid or relative path."); }
+		if ($log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "$inientry invalid or relative path."); }
 		elseif ($document_root_realpath === FALSE) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT invalid or relative path."); }
-		elseif (strncmp($error_log_realpath . DIRECTORY_SEPARATOR, $document_root_realpath . DIRECTORY_SEPARATOR, strlen($document_root_realpath)+1) === 0) {
-			tres($meta, TEST_HIGH, "error_log in DOCUMENT_ROOT.", "The error logfile is located inside the document root directory and may be accessible publicly. The error_log should always point to a file outside the document root.");
-		} else { tres($meta, TEST_OK, "error_log outside of DOCUMENT_ROOT."); }
+		elseif (strncmp($log_realpath . DIRECTORY_SEPARATOR, $document_root_realpath . DIRECTORY_SEPARATOR, strlen($document_root_realpath)+1) === 0) {
+			tres($meta, TEST_HIGH, "$inientry in DOCUMENT_ROOT.", "The $inientry logfile is located inside the document root directory and may be accessible publicly. Logfiles should always point to a file outside the document root.");
+		} else { tres($meta, TEST_OK, "$inientry outside of DOCUMENT_ROOT."); }
 	}
 }
-test_error_log_in_document_root();
+test_log_in_document_root('error_log');
+test_log_in_document_root('mail.log');
 
 
 // writable document root?
