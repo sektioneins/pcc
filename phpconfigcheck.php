@@ -197,7 +197,7 @@ function ini_list($val)
 	if ($val == "") {
 		return NULL;
 	}
-	$ret = split('[, ]+', $val);
+	$ret = preg_split('/[, ]+/', $val);
 	if (count($ret) == 1 && $ret[0] == "") {
 		return NULL;
 	}
