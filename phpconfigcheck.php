@@ -220,6 +220,11 @@ function is_writable_or_chmodable($fn)
 	return false;
 }
 
+function is_on($v)
+{
+	if ($v == "0" || strtolower($v) == "off") { return 0; }
+	return 1;
+}
 
 /*****************************************************************************/
 
@@ -327,23 +332,23 @@ function test_all_ini_entries()
 
 		switch ($k) {
 		case 'display_errors':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MEDIUM, "display_errors is on.");
 			}
 			break;
 		case 'display_startup_errors':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MEDIUM, "display_startup_errors is on.");
 				$recommendation = $helptext['display_errors'];
 			}
 			break;
 		case 'log_errors':
-			if ($v != "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "You are not logging errors.");
 			}
 			break;
 		case 'expose_php':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "PHP is exposed by HTTP headers.");
 			}
 			break;
@@ -396,12 +401,12 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'allow_url_fopen':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "fopen() is allowed to open URLs.");
 			}
 			break;
 		case 'allow_url_include':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "include/require() can include URLs.");
 			}
 			break;
@@ -418,13 +423,13 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'magic_quotes_sybase':
-			if ($v != "0") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
 				$recommendation = $helptext['magic_quotes'];
 			}
 			break;
 		case 'enable_dl':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "PHP can load extensions during runtime.");
 			}
 			break;
@@ -487,17 +492,17 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'session.cookie_httponly':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "no implicit httpOnly-flag for session cookie.");
 			}
 			break;
 		case 'session.cookie_secure':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "no implicit secure-flag for session cookie.");
 			}
 			break;
 		case 'session.cookie_lifetime':
-			if ($v == "0") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "no implicit lifetime for session cookie.");
 			}
 			break;
@@ -507,22 +512,22 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'session.use_strict_mode':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MEDIUM, "strict mode not activated.");
 			}
 			break;
 		case 'session.use_cookies':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "Session ID not stored in cookie.");
 			}
 			break;
 		case 'session.use_only_cookies':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "Session ID not limited to cookie.");
 			}
 			break;
 		case 'always_populate_raw_post_data':
-			if ($v != "0") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_COMMENT, "HTTP_RAW_POST_DATA is available.");
 			}
 			break;
@@ -534,7 +539,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'assert.active':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
 			}
 			break;
@@ -642,7 +647,7 @@ function test_all_ini_entries()
 		case 'exit_on_timeout':
 			if (!isset($_SERVER["SERVER_SOFTWARE"]) || strncmp($_SERVER["SERVER_SOFTWARE"], "Apache/1", strlen("Apache/1")) !== 0) {
 				list($result, $reason) = array(TEST_SKIPPED, "only relevant for Apache 1.");
-			} elseif ($v != "1") {
+			} elseif (!is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "not enabled.");
 			}
 			break;
@@ -675,7 +680,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'asp_tags':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
 			}
 			break;
@@ -714,19 +719,19 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'intl.use_exceptions':
-			if ($v) {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "intl functions throw exceptions.");
 			}
 			break;
 		case 'last_modified':
-			if ($v) {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "is set.");
 			}
 			break;
 		
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "Suhosin is in simulation mode.");
 			}
 			break;
@@ -765,7 +770,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'suhosin.cookie.encrypt':
-			if ($v == "1") {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_COMMENT, "cookie encryption on.");
 				$recommendation = $helptext['suhosin.cookie.encrypt=on'];
 			} else {
@@ -777,7 +782,7 @@ function test_all_ini_entries()
 		case 'suhosin.get.disallow_nul':
 		case 'suhosin.post.disallow_nul':
 		case 'suhosin.request.disallow_nul':
-			if ($v != "1") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
 				$recommendation = $helptext['suhosin.*.disallow_nul'];
 			}
@@ -785,7 +790,7 @@ function test_all_ini_entries()
 		case 'suhosin.get.disallow_ws':
 		case 'suhosin.post.disallow_ws':
 		case 'suhosin.cookie.disallow_ws':
-			if ($v != "1" && ini_get('suhosin.request.disallow_ws') != "1") {
+			if (!is_on($v) && !is_on(ini_get('suhosin.request.disallow_ws'))) {
 				list($result, $reason) = array(TEST_LOW, "default value.");
 				$recommendation = $helptext['suhosin.*.disallow_ws'];
 			}
@@ -914,13 +919,13 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'suhosin.coredump':
-			if ($v) {
+			if (is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
 				$recommendation = $helptext['debugonly'];
 			}
 			break;
 		case 'suhosin.disable.display_errors':
-			if ($v == "0" || strtolower($v) == "Off") {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MEDIUM, "display_errors is not disabled.");
 			}
 			break;
