@@ -222,7 +222,7 @@ function is_writable_or_chmodable($fn)
 
 function is_on($v)
 {
-	if ($v == "0" || strtolower($v) == "off") { return 0; }
+	if ($v == "0"  || $v === "" || strtolower($v) == "off") { return 0; }
 	return 1;
 }
 
