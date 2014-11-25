@@ -316,7 +316,13 @@ function test_all_ini_entries()
 		'suhosin.*script/writable' => "An attacker may try to inject code into the logging/upload script. Better change file permissions to read-only access.",
 		'suhosin.*script/chmod' => "The logging or upload script is not set writable, but the current user has the right to change its access permission. Please change the file's owner.",
 		'debugonly' => "This feature is for debugging only. Please deactivate.",
-		'suhosin.disable.display_errors' => "In PHP enabling display_errors is one of the major causes for information disclosure. For example, an attacker may gather information about the document root, SQL queries, class names, function names, version numbers and in rare cases even login credentials or session IDs. Suhosin is able to deactivate display_errors entirely. You should make use of this feature."
+		'suhosin.disable.display_errors' => "In PHP enabling display_errors is one of the major causes for information disclosure. For example, an attacker may gather information about the document root, SQL queries, class names, function names, version numbers and in rare cases even login credentials or session IDs. Suhosin is able to deactivate display_errors entirely. You should make use of this feature.",
+		'suhosin.executor.allow_symlink' => "Allowing symlinks while using open_basedir is actually a security risk. Only use this option if you know exactly what you are doing.",
+		'suhosin.executor.disable_emodifier' => "Using the /e modifier with preg_replace() can eval code. An attacker may try to inject the /e modifier or code to evaluate. If your application does not need the /e modifier, it is best to deactivate it here. As of PHP 5.5.0 the /e modifier has been deprecated and should no longer be used anyway.",
+		'suhosin.executor.disable_eval' => "Using eval() with user input is one of the most dangerous security issues in PHP. If eval() is not needed, it should be deactivated.",
+		'suhosin.executor.*.*list' => "It is recommended to disable harmful functions by setting a suitable whitelist or blacklist.",
+		'suhosin.executor.include.allow_writable_files' => "Turn this flag off to prevent PHP from executing writable PHP files. This is a very effective protection against code execution that was uploaded by an attacker before. Note: Some software such as web-installers or web-based plugin installers won't work out of the box with this flag turned off.",
+		'suhosin.executor.include.*list' => "Usually it is a good idea to disable URL includes entirely by leaving both whitelist and blacklist empty. Remote content can be loaded and validated in a secure manner e.g. by using cURL."
 	);
 
 	// php.ini checks
@@ -919,7 +925,14 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'suhosin.coredump':
+		case 'suhosin.log.stdout':
 			if (is_on($v)) {
+				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
+				$recommendation = $helptext['debugonly'];
+			}
+			break;
+		case 'suhosin.log.file.time':
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
 				$recommendation = $helptext['debugonly'];
 			}
@@ -929,11 +942,56 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_MEDIUM, "display_errors is not disabled.");
 			}
 			break;
-	
+		case 'suhosin.executor.allow_symlink':
+			if (is_on($v) && ini_get('open_basedir') != "") {
+				list($result, $reason) = array(TEST_MEDIUM, "symlinks enabled.");
+			}
+			break;
+		case 'suhosin.executor.disable_emodifier':
+			if (!is_on($v)) {
+				list($result, $reason) = array((PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5) ? TEST_HIGH : TEST_MAYBE, "preg_replace can eval.");
+			}
+			break;
+		case 'suhosin.executor.disable_eval':
+			if (!is_on($v)) {
+				list($result, $reason) = array(TEST_MAYBE, "eval is not disabled.");
+			}
+			break;
+		case 'suhosin.executor.eval.blacklist':
+			if ($v == "" && !is_on(ini_get('suhosin.executor.disable_eval')) && ini_get('suhosin.executor.eval.whitelist') == "") {
+				list($result, $reason) = array(TEST_MAYBE, "whitelist and blacklist not set.");
+				$recommendation = $helptext['suhosin.executor.*.*list'];
+			}
+			break;
+		case 'suhosin.executor.func.blacklist':
+			if ($v == "" && ini_get('suhosin.executor.func.whitelist') == "") {
+				list($result, $reason) = array(TEST_MAYBE, "whitelist and blacklist not set.");
+				$recommendation = $helptext['suhosin.executor.*.*list'];
+			}
+			break;
+		case 'suhosin.executor.eval.whitelist': // handled by blacklist check
+		case 'suhosin.executor.func.whitelist':
+			$ignore = 1;
+			break;
+		case 'suhosin.executor.include.allow_writable_files':
+			if (is_on($v)) {
+				list($result, $reason) = array(TEST_MAYBE, "write + execute enabled.");
+			}
+			break;
+		case 'suhosin.executor.include.blacklist':
+		case 'suhosin.executor.include.whitelist':
+			$v = ini_list($v);
+			if ($v) {
+				list($result, $reason) = array(TEST_MAYBE, "include whitelist/blacklist set.");
+				$recommendation = $helptext['suhosin.executor.include.*list'];
+			}
+			break;
+		
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
 		case 'mail.log':
+		case 'suhosin.log.file.name':
 			// silently ignore this option
 			$ignore = 1;
 			break;
@@ -1075,6 +1133,7 @@ function test_log_in_document_root($inientry)
 }
 test_log_in_document_root('error_log');
 test_log_in_document_root('mail.log');
+test_log_in_document_root('suhosin.log.file.name');
 
 
 // writable document root?
