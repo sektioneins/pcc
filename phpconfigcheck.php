@@ -1050,14 +1050,14 @@ function test_suhosin_installed()
 test_suhosin_installed();
 
 
-// error_log inside document root?
+// logfile inside document root?
 function test_log_in_document_root($inientry)
 {
 	global $cfg;
 	
 	$meta = tdesc("$inientry in document root", "Checks if $inientry path is in the current document root");
 	if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
-	elseif (ini_get($inientry) === "") { tres($meta, TEST_SKIPPED, "error_log not set."); }
+	elseif (ini_get($inientry) === "") { tres($meta, TEST_SKIPPED, "$inientry not set."); }
 	elseif ($inientry === 'error_log' && ini_get($inientry) === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
 	elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
 	else {
