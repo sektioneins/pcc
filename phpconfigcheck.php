@@ -343,7 +343,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'log_errors':
-			if (is_on($v)) {
+			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "You are not logging errors.");
 			}
 			break;
