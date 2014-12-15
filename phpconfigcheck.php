@@ -242,6 +242,7 @@ function test_all_ini_entries()
 		'post_max_size' => "Setting the maximum allowed POST size to a high value may lead to denial-of-service from memory exhaustion. If your application does not need huge file uploads, consider setting this option to a lower value. Note: File uploads have to be covered by this setting as well.",
 		'post_max_size>memory_limit' => "post_max_size must be lower than memory_limit. Otherwise, a simple POST request will let PHP reach the configured memory limit and stop execution. Apart from denial-of-service an attacker may try to split a transaction, e.g. let PHP execute only a part of a program.",
 		'upload_max_filesize' => "This value should match the file size actually required.",
+		'max_file_uploads' => "This value should match the maximum number of simultaneous file uploads. (lower is better)",
 		'allow_url_fopen' => "Deactivate, if possible. Allowing URLs in fopen() can be a suprising side-effect for unexperienced developers. Even if deactivated, it is still possible to receive content from URLs, e.g. with curl.",
 		'allow_url_include' => "This flag should remain deactivated for security reasons.",
 		'magic_quotes' => "This option should be deactivated. Instead, user input should be escaped properly and handled in a secure way when building database queries. The use of magic quotes or similar behaviour is highly discouraged. Current PHP versions do not support this feature anymore.",
@@ -403,6 +404,11 @@ function test_all_ini_entries()
 			if ($v === "2M") {
 				list($result, $reason) = array(TEST_COMMENT, "default value.");
 			} elseif (ini_atol($v) >= ini_atol("2G")) {
+				list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
+			}
+			break;
+		case 'max_file_uploads':
+			if (intval($v) > 30) {
 				list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
 			}
 			break;
@@ -992,6 +998,7 @@ function test_all_ini_entries()
 		case 'include_path':
 		case 'mail.log':
 		case 'suhosin.log.file.name':
+		case 'upload_tmp_dir':
 			// silently ignore this option
 			$ignore = 1;
 			break;
@@ -1109,20 +1116,25 @@ test_suhosin_installed();
 
 
 // logfile inside document root?
-function test_log_in_document_root($inientry)
+function test_log_in_document_root($inientry, $value_if_not_set=null)
 {
 	global $cfg;
 	
+	$inivalue = ini_get($inientry);
+	if ($inivalue === "") {
+		$inivalue = $value_if_not_set;
+	}
+	
 	$meta = tdesc("$inientry in document root", "Checks if $inientry path is in the current document root");
 	if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
-	elseif (ini_get($inientry) === "") { tres($meta, TEST_SKIPPED, "$inientry not set."); }
+	elseif ($inivalue === null) { tres($meta, TEST_SKIPPED, "$inientry not set."); }
 	elseif ($inientry === 'error_log' && ini_get($inientry) === "syslog") { tres($meta, TEST_SKIPPED, "error_log to syslog."); }
 	elseif (!isset($_SERVER['DOCUMENT_ROOT'])) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT not set."); }
 	else {
-		$log_realpath = realpath(ini_get($inientry));
+		$log_realpath = realpath($inivalue);
 		$document_root_realpath = realpath($_SERVER['DOCUMENT_ROOT']);
 		if ($log_realpath === FALSE) { /* maybe new/nonexistent file? => use dirname instead */
-			$log_realpath = realpath(dirname(ini_get($inientry)));
+			$log_realpath = realpath(dirname($inivalue));
 		}
 		if ($log_realpath === FALSE) { tres($meta, TEST_SKIPPED, "$inientry invalid or relative path."); }
 		elseif ($document_root_realpath === FALSE) { tres($meta, TEST_SKIPPED, "DOCUMENT_ROOT invalid or relative path."); }
@@ -1134,6 +1146,7 @@ function test_log_in_document_root($inientry)
 test_log_in_document_root('error_log');
 test_log_in_document_root('mail.log');
 test_log_in_document_root('suhosin.log.file.name');
+test_log_in_document_root('upload_tmp_dir', sys_get_temp_dir());
 
 
 // writable document root?
