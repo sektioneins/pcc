@@ -1121,7 +1121,7 @@ function test_log_in_document_root($inientry, $value_if_not_set=null)
 	global $cfg;
 	
 	$inivalue = ini_get($inientry);
-	if ($inivalue === "") {
+	if ($inivalue === "" || $inivalue === false) {
 		$inivalue = $value_if_not_set;
 	}
 	
