@@ -238,7 +238,7 @@ function test_all_ini_entries()
 		'max_execution_time' => "In order to prevent denial-of-service attacks where an attacker tries to keep your server's CPU busy, this value should be set to the lowest possible value, e.g. 30 (seconds).",
 		'max_input_time' => "It may be useful to limit the time a script is allowed to parse input. This should be decided on a per application basis.",
 		'max_input_nesting_level' => "Deep input nesting is only required in rare cases and may trigger unexpected ressource limits.",
-		'memory_limit' => "A high memory limit may easy lead lead to ressource exhaustion and thus make your application vulnerable to denial-of-service attacks. This value should be set approximately 20% above empirically gathered maximum memory requirement.",
+		'memory_limit' => "A high memory limit may easily lead to resource exhaustion and thus make your application vulnerable to denial-of-service attacks. This value should be set approximately 20% above an empirically gathered maximum memory requirement.",
 		'post_max_size' => "Setting the maximum allowed POST size to a high value may lead to denial-of-service from memory exhaustion. If your application does not need huge file uploads, consider setting this option to a lower value. Note: File uploads have to be covered by this setting as well.",
 		'post_max_size>memory_limit' => "post_max_size must be lower than memory_limit. Otherwise, a simple POST request will let PHP reach the configured memory limit and stop execution. Apart from denial-of-service an attacker may try to split a transaction, e.g. let PHP execute only a part of a program.",
 		'upload_max_filesize' => "This value should match the file size actually required.",
