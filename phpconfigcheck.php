@@ -323,7 +323,9 @@ function test_all_ini_entries()
 		'suhosin.executor.disable_eval' => "Using eval() with user input is one of the most dangerous security issues in PHP. If eval() is not needed, it should be deactivated.",
 		'suhosin.executor.*.*list' => "It is recommended to disable harmful functions by setting a suitable whitelist or blacklist.",
 		'suhosin.executor.include.allow_writable_files' => "Turn this flag off to prevent PHP from executing writable PHP files. This is a very effective protection against code execution that was uploaded by an attacker before. Note: Some software such as web-installers or web-based plugin installers won't work out of the box with this flag turned off.",
-		'suhosin.executor.include.*list' => "Usually it is a good idea to disable URL includes entirely by leaving both whitelist and blacklist empty. Remote content can be loaded and validated in a secure manner e.g. by using cURL."
+		'suhosin.executor.include.*list' => "Usually it is a good idea to disable URL includes entirely by leaving both whitelist and blacklist empty. Remote content can be loaded and validated in a secure manner e.g. by using cURL.",
+		'suhosin.filter.action=missing' => "The file configured to be included upon Suhosin filter violations is missing.",
+		'suhosin.filter.action=writable' => "The file configured to be included upon Suhosin filter violations is writable or may become writable with current user rights."
 	);
 
 	// php.ini checks
@@ -993,6 +995,26 @@ function test_all_ini_entries()
 			}
 			break;
 		
+		case 'suhosin.filter.action':
+			// $v looks like "302,/var/www/foo.php" but may be as obscure as "3ab, ,;http://foo"
+			if ($v != "" && preg_match('#^\s*(?:\d.*?[,;]+)?[\s,;]*(.*)$#', $v, $matches)) {
+				if (preg_match('#^http://#', $matches[1])) {
+					// redirect to URL. -> no further check.
+				} else {
+					// includes PHP file
+					if (!file_exists($matches[1])) {
+						// -> problem. file does not exist.
+						list($result, $reason) = array(TEST_HIGH, "filter action file missing");
+						$recommendation = $helptext['suhosin.filter.action=missing'];
+					} elseif (is_writable_or_chmodable($matches[1])) {
+						// -> problem. file is writable or potentially writable.
+						list($result, $reason) = array(TEST_HIGH, "filter action file writable");
+						$recommendation = $helptext['suhosin.filter.action=writable'];
+					}
+				}
+			}
+			break;
+			
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
