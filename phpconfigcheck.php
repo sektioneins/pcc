@@ -1212,6 +1212,17 @@ function test_include_path_writable()
 }
 test_include_path_writable();
 
+// is debug build?
+function test_debug_build()
+{
+	$meta = tdesc("Debug build", "Checks if PHP was built with --enable-debug");
+	if (constant('PHP_DEBUG') || constant('ZEND_DEBUG_BUILD')) {
+		tres($meta, TEST_MEDIUM, "debug build.", "Using a debug build of PHP makes it possible to enable debugging features in PHP, which can be useful for attackers, e.g. to get more accurate error messages or to simplify DoS attacks. Also, debugging may impact overall performance. This is probably not what you want in a production environment. Please recompile PHP without debugging.");
+	} else {
+		tres($meta, TEST_OK, "not a debug build.");
+	}
+}
+test_debug_build();
 
 /*****************************************************************************/
 
