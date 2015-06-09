@@ -1268,6 +1268,27 @@ function test_debug_build()
 }
 test_debug_build();
 
+// got root?
+function test_godmode()
+{
+	global $cfg;
+	$meta = tdesc("got root?", "Test for root access on non-windows systems");
+	if ($cfg['is_win']) {
+		tres($meta, TEST_SKIPPED, "windows."); // maybe check for admin access. but how?
+		return;
+	}
+	if (!extension_loaded("posix")) {
+		tres($meta, TEST_SKIPPED, "posix extension not available");
+		return;
+	}
+	if (posix_getuid() == 0) {
+		tres($meta, TEST_CRITICAL, "you are root!", "Executing PHP as root is hardly ever necessary.");
+	} else {
+		tres($meta, TEST_OK, "not root");
+	}
+}
+test_godmode();
+
 /*****************************************************************************/
 
 
