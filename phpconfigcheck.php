@@ -1230,6 +1230,32 @@ function test_include_path_writable()
 }
 test_include_path_writable();
 
+// sendmail writable?
+function test_sendmail_writable()
+{
+	$meta = tdesc("sendmail writable", "Checks if the sendmail executable is writable");
+	$sm = ini_get('sendmail_path');
+	if ($sm == "" || $sm === NULL) {
+		tres($meta, TEST_OK, "sendmail_path not set.");
+		return;
+	}
+	$sm_chunks = explode(' ', $sm);
+	$sm_executable = $sm_chunks[0];
+	$sm_dir = dirname($sm_executable);
+	if (is_file($sm_executable) || is_link($sm_executable)) {
+		if (is_writable_or_chmodable($sm_executable)) {
+			tres($meta, TEST_CRITICAL, "sendmail is writable", "The configured sendmail_path can be changed by the current user. Please change its permissions.");
+			return;
+		}
+	}
+	if (is_writable_or_chmodable(dirname($sm_executable)) || is_writable_or_chmodable(dirname(realpath($sm_executable)))) {
+		tres($meta, TEST_CRITICAL, "The directory containing the sendmail_path executable is writable or its permission can be changed by the current user.");
+		return;
+	}
+	tres($meta, TEST_OK, "sendmail_path is not writable.");
+}
+test_sendmail_writable();
+
 // is debug build?
 function test_debug_build()
 {
