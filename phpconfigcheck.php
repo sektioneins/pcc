@@ -264,6 +264,8 @@ function test_all_ini_entries()
 		'session.use_strict_mode' => "If activated, PHP will regenerate unknown session IDs. This effectively counteracts session fixation attacks.",
 		'session.use_cookies' => "If activated, PHP will store the session ID in a cookie on the client side. This is recommended.",
 		'session.use_only_cookies' => "PHP will send the session ID only via cookie to the client, not e.g. in the URL. Please activate.",
+		'session.name' => "Your session name is boring. Why not change it to something more suitable for your application?",
+		'session.use_trans_sid' => "Allowing the user to choose to store the session ID within the URL makes session hijacking a realistic security risk. URLs are logged in logfiles and can easily be copied by the user or by scripts. This options must be disabled.",
 		'always_populate_raw_post_data' => "In a shared hosting environment it should not be the default to let the unexperienced user parse raw POST data themselves. Otherwise, this options should only be used, if accessing the raw POST data is actually required.",
 		'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
 		'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
@@ -538,6 +540,16 @@ function test_all_ini_entries()
 		case 'session.use_only_cookies':
 			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_HIGH, "Session ID not limited to cookie.");
+			}
+			break;
+		case 'session.name':
+			if ($v == "PHPSESSID") {
+				list($result, $reason) = array(TEST_COMMENT, "default session name.");
+			}
+			break;
+		case 'session.use_trans_sid':
+			if (is_on($v)) {
+				list($result, $reason) = array(TEST_HIGH, "transparent SID active.");
 			}
 			break;
 		case 'always_populate_raw_post_data':
@@ -1055,6 +1067,11 @@ function test_all_ini_entries()
 		case 'ignore_repeated_source':
 		case 'ignore_user_abort':
 		case 'implicit_flush':
+		case 'report_memleaks': // may be relevant, but only active in debug builds anyway
+		case 'session.auto_start':
+		case 'session.cache_expire':
+		case 'session.cache_limiter':
+		case 'short_open_tag':
 		case 'suhosin.apc_bug_workaround':
 		case 'suhosin.cookie.checkraddr':
 		case 'suhosin.cookie.cryptdocroot':
@@ -1068,6 +1085,7 @@ function test_all_ini_entries()
 		case 'suhosin.log.script':
 		case 'suhosin.log.use-x-forwarded-for':
 		case 'suhosin.request.disallow_ws':
+		case 'track_errors':
 			list($result, $reason) = array(TEST_OK, "any value is ok");
 			break;
 	
