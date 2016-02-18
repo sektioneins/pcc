@@ -52,9 +52,9 @@
 /*****************************************************************************/
 
 $pcc_name = "PHP Secure Configuration Checker";
-$pcc_version = "0.1-dev5";
-$pcc_copy = "(c) 2015 SektionEins GmbH / Ben Fuhrmannek";
-$pcc_date = "2015-06-09"; // release date for update check
+$pcc_version = "0.1-dev6";
+$pcc_copy = "(c) 2015-2016 SektionEins GmbH / Ben Fuhrmannek";
+$pcc_date = "2016-02-18"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
 
 /*****************************************************************************/
@@ -270,6 +270,7 @@ function test_all_ini_entries()
 		'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
 		'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
 		'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
+		'zend.assertions' => "assert() in able to evaluate code. Please deactivate this feature for production environments by setting zend.assertions=-1.",
 		'auto_append_file' => "PHP is automatically executing an extra script for each request. An attacker may have planted it there. If this is unexpected, deactivate.",
 		'cli.pager' => "PHP executes an extra script to process CLI output. An attacker may have planted it there. If this is unexpected, deactivate.",
 		'cli.prompt' => "An overlong CLI prompt may indicate incorrect configuration. Please check manually.",
@@ -297,6 +298,8 @@ function test_all_ini_entries()
 		'intl.error_level' => "An error induced by an attacker can change the program's control flow and may lead to unexpected side-effects.",
 		'intl.use_exceptions' => "If unhandled, exceptions may have unexpected side-effects. Please make sure potential exceptions are handled correctly when calling intl-functions.",
 		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
+		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
+		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
 		
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -380,6 +383,13 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_MEDIUM, "Input nesting level extremely high.");
 			} elseif (intval($v) > 64) {
 				list($result, $reason) = array(TEST_MAYBE, "Input nesting level higher than usual.");
+			}
+			break;
+		case 'max_input_vars':
+			if (intval($v) > 5000) {
+				list($result, $reason) = array(TEST_MEDIUM, "Extremely high number.");
+			} elseif (intval($v) > 1000) {
+				list($result, $reason) = array(TEST_MAYBE, "Higher number than usual.");
 			}
 			break;
 		case 'memory_limit':
@@ -574,6 +584,11 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_MEDIUM, "assert callback set.");
 			}
 			break;
+		case 'zend.assertions':
+			if (intval($v) > 0) {
+				list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
+			}
+			break;
 		case 'auto_append_file':
 		case 'auto_prepend_file':
 			if ($v !== NULL && $v !== "") {
@@ -631,7 +646,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'default_socket_timeout':
-			if (intval ($v) > 60) {
+			if (intval($v) > 60) {
 				list($result, $reason) = array(TEST_LOW, "default socket timeout rather big.");
 			}
 			break;
@@ -752,6 +767,11 @@ function test_all_ini_entries()
 		case 'last_modified':
 			if (is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "is set.");
+			}
+			break;
+		case 'zend.multibyte':
+			if (is_on($v)) {
+				list($result, $reason) = array(TEST_HIGH, "Multibyte encodings are active.");
 			}
 			break;
 		
@@ -1042,6 +1062,7 @@ function test_all_ini_entries()
 		case 'assert.bail':
 		case 'assert.quiet_eval':
 		case 'assert.warning':
+		case 'assert.exception':
 		case 'auto_detect_line_endings':
 		case 'bcmath.scale':
 		case 'browscap':
