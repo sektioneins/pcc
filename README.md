@@ -18,13 +18,13 @@ Idea
 Usage
 -----
 
-* **CLI**: Simply call `php phpconfigcheck.php`. That's it. Add `-a` to see hidden results as well and `-h` for HTML output.
+* **CLI**: Simply call `php phpconfigcheck.php`. That's it. Add `-a` to see hidden results as well, `-h` for HTML output and `-j` for JSON output.
 
 * **WEB**: Copy this script to any directory accessible by your webserver, e.g. your document root. See also 'Safeguards' below.
 
-  The output in non-CLI mode is HTML by default. This behaviour can be changed by setting the environment variable  `PCC_OUTPUT_TYPE=text`.
+  The output in non-CLI mode is HTML by default. This behaviour can be changed by setting the environment variable  `PCC_OUTPUT_TYPE=text` or `PCC_OUTPUT_TYPE=json`.
 
-  Some test cases are hidden by default, specifically skipped, ok and unknown/untested. To show all results, use `phpconfigcheck.php?showall=1`.
+  Some test cases are hidden by default, specifically skipped, ok and unknown/untested. To show all results, use `phpconfigcheck.php?showall=1`. This does not apply to JSON output, which returns all results by default.
 
 Safeguards
 ----------
