@@ -160,6 +160,10 @@ if (php_sapi_name() == "cli") {
 	if (isset($_GET['showall']) && $_GET['showall'] === "1") {
 		$cfg['showall'] = 1;
 	}
+
+	if (isset($_GET['format'])) {
+		$cfg['output_type'] = $_GET['format'];
+	}
 }
 
 // detect OS
@@ -1441,5 +1445,7 @@ img {
 
 
 <?php
+} else {
+	die("unrecognized output format");
 }
 ?>
