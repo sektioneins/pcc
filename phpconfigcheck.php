@@ -108,10 +108,13 @@ if (php_sapi_name() == "cli") {
 	$cfg['is_cli'] = true;
 	
 	if (function_exists('getopt')) {
-		foreach (getopt("ha") as $k => $v) {
+		foreach (getopt("hja") as $k => $v) {
 			switch ($k) {
 				case 'h':
 					$cfg['output_type'] = 'html';
+					break;
+				case 'j':
+					$cfg['output_type'] = 'json';
 					break;
 				case 'a':
 					$cfg['showall'] = 1;
@@ -148,9 +151,18 @@ if (php_sapi_name() == "cli") {
 		header("Content-Type: text/plain; charset=utf-8");
 	}
 
+	if (getenv('PCC_OUTPUT_TYPE') === 'json') {
+		$cfg['output_type'] = 'json';
+		header("Content-Type: application/json; charset=utf-8");
+	}
+
 	// do not hide unknown/skipped/ok tests
 	if (isset($_GET['showall']) && $_GET['showall'] === "1") {
 		$cfg['showall'] = 1;
+	}
+
+	if (isset($_GET['format'])) {
+		$cfg['output_type'] = $_GET['format'];
 	}
 }
 
@@ -1327,6 +1339,10 @@ if ($cfg['output_type'] == "text") {
 	}
 
 
+} elseif ($cfg['output_type'] == "json") {
+
+	echo json_encode($trbs);
+
 } elseif ($cfg['output_type'] == "html") {
 	function e($str) { return htmlentities($str, ENT_QUOTES); }
 
@@ -1429,5 +1445,7 @@ img {
 
 
 <?php
+} else {
+	die("unrecognized output format");
 }
 ?>
