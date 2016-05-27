@@ -72,9 +72,13 @@ define("TEST_UNKNOWN", "unknown"); // something is unknown.
 
 // globals
 $cfg = array(	'output_type' => 'text',
+				'allowed_output_types' => array('text', 'html'),
 				'showall' => 0,
 				'result_codes_default' => array(TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT),
 				'need_update' => 0);
+if (function_exists('json_encode')) {
+	$cfg['allowed_output_types'][] = 'json';
+}
 $all_result_codes = array(TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT, TEST_OK, TEST_SKIPPED, TEST_UNKNOWN);
 $trbs = array(); // test result by severity, e.g. $trbs[TEST_OK][...]
 foreach ($all_result_codes as $v) { $trbs[$v] = array(); }
@@ -114,6 +118,9 @@ if (php_sapi_name() == "cli") {
 					$cfg['output_type'] = 'html';
 					break;
 				case 'j':
+					if (!in_array('json', $cfg['allowed_output_types'])) {
+						die("json output not supported");
+					}
 					$cfg['output_type'] = 'json';
 					break;
 				case 'a':
@@ -146,23 +153,27 @@ if (php_sapi_name() == "cli") {
 	}
 
 	// output type
-	if (getenv('PCC_OUTPUT_TYPE') === 'text') {
-		$cfg['output_type'] = 'text';
-		header("Content-Type: text/plain; charset=utf-8");
+	if (isset($_GET['format']) && in_array($_GET['format'], $cfg['allowed_output_types'], true)) {
+		$cfg['output_type'] = $_GET['format'];
+	} elseif (in_array(getenv('PCC_OUTPUT_TYPE'), $cfg['allowed_output_types'], true)) {
+		$cfg['output_type'] = getenv('PCC_OUTPUT_TYPE');
 	}
 
-	if (getenv('PCC_OUTPUT_TYPE') === 'json') {
-		$cfg['output_type'] = 'json';
-		header("Content-Type: application/json; charset=utf-8");
+	switch ($cfg['output_type']) {
+		case 'text':
+			header("Content-Type: text/plain; charset=utf-8");
+			break;
+		case 'json':
+			header("Content-Type: application/json; charset=utf-8");
+			break;
+		case 'html':
+			header("Content-Type: text/html; charset=utf-8");
+			break;
 	}
 
 	// do not hide unknown/skipped/ok tests
 	if (isset($_GET['showall']) && $_GET['showall'] === "1") {
 		$cfg['showall'] = 1;
-	}
-
-	if (isset($_GET['format'])) {
-		$cfg['output_type'] = $_GET['format'];
 	}
 }
 
@@ -1443,9 +1454,6 @@ img {
 </body>
 </html>
 
-
 <?php
-} else {
-	die("unrecognized output format");
 }
 ?>

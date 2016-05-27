@@ -26,7 +26,7 @@ Usage
 
   Some test cases are hidden by default, specifically skipped, ok and unknown/untested. To show all results, use `phpconfigcheck.php?showall=1`. This does not apply to JSON output, which returns all results by default.
 
-  To control the output format in WEB mode use `phpconfigcheck.php?format=...`, where the value of `format` maybe one of `text`, `html` or `json`. For example: `phpconfigcheck.php?format=text`
+  To control the output format in WEB mode use `phpconfigcheck.php?format=...`, where the value of `format` maybe one of `text`, `html` or `json`. For example: `phpconfigcheck.php?format=text`. The `format` parameter takes precedence over PCC_OUTPUT_TYPE.
 
 Safeguards
 ----------
@@ -58,4 +58,3 @@ Notes
 * For copyright and license information, see phpconfigcheck.php and the LICENSE file.
 * Issues, comments, enhancements? Please use the Github issue tracker:
   https://github.com/sektioneins/pcc/issues
-
