@@ -1172,11 +1172,15 @@ test_pcc_need_update();
 // old php version?
 function test_old_php_version()
 {
-	$meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.5");
-	if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+	$meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.6");
+	if (version_compare(PHP_VERSION, '5.6.0') >= 0) {
 		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-	} else {
+	} elseif (version_compare(PHP_VERSION, '5.5.0') >= 0) {
 		tres($meta, TEST_HIGH, "PHP version is older than 5.5",
+			"PHP 5.5 reached its end of life on 21 Jul 2016. " .
+			"While this version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
+	} else {
+		tres($meta, TEST_HIGH, "PHP version is older than 5.6 and even older than 5.5",
 			"Please upgrade PHP as soon as possible. " .
 			"Old versions of PHP are not maintained anymore and may contain security flaws.");
 	}
