@@ -34,7 +34,7 @@
     Some text fragments have been copied from the printed PHP Web Security
     Poster with permission. - (C) 2009 SektionEins GmbH
     - Concept: Stefan Esser, fukami, Ben Fuhrmannek
-    
+
 */
 
 /*****************************************************************************/
@@ -84,23 +84,23 @@ $trbs = array(); // test result by severity, e.g. $trbs[TEST_OK][...]
 foreach ($all_result_codes as $v) { $trbs[$v] = array(); }
 $cfg['s1_logo'] = "data:image/gif;base64,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";
 $cfg['s1_logo_aa'] = "
-            `.-:///:-.` /+-`        
-        `/shmmmmmmmmmm:.dmmds:      
-     `/ymmmdyo/::-:://  `:sdmmh:    
-    /hmmdo-                `+dmmy.  
-  `smmd/`                    .ymmh` 
- `hmmy.                        /-`  
- ymmy`                        -oyy  
--mmm-                         .dmm:    ---   $pcc_name 
+            `.-:///:-.` /+-`
+        `/shmmmmmmmmmm:.dmmds:
+     `/ymmmdyo/::-:://  `:sdmmh:
+    /hmmdo-                `+dmmy.
+  `smmd/`                    .ymmh`
+ `hmmy.                        /-`
+ ymmy`                        -oyy
+-mmm-                         .dmm:    ---   $pcc_name
 +mmh                           ymmo    ---   Version $pcc_version
 ommh                           ymms    ---   $pcc_copy
 :mmd.                         `dmm/    ---- https://sektioneins.de/
-`hmms                         +mmd` 
- -dmmo                       +mmd:  
-  -dmmy.                   .smmd:   
-   `smmms-               -sdmmy.    
-     -sdmmds+:.``  `.-/sdmmms-      
-       `/sdmmmmmdddmmmmmds/`        
+`hmms                         +mmd`
+ -dmmo                       +mmd:
+  -dmmy.                   .smmd:
+   `smmms-               -sdmmy.
+     -sdmmds+:.``  `.-/sdmmms-
+       `/sdmmmmmdddmmmmmds/`
            .:/ossssso+:.            ";
 
 /*****************************************************************************/
@@ -110,7 +110,7 @@ ommh                           ymms    ---   $pcc_copy
 if (php_sapi_name() == "cli") {
 	$cfg['output_type'] = "text";
 	$cfg['is_cli'] = true;
-	
+
 	if (function_exists('getopt')) {
 		foreach (getopt("hja") as $k => $v) {
 			switch ($k) {
@@ -132,7 +132,7 @@ if (php_sapi_name() == "cli") {
 } else {
 	$cfg['output_type'] = "html";
 	$cfg['is_cli'] = false;
-	
+
 	// mtime check
 	$cfg['PCC_DISABLE_MTIME'] = getenv("PCC_DISABLE_MTIME");
 	$cfg['SCRIPT_FILENAME'] = getenv("SCRIPT_FILENAME");
@@ -141,14 +141,14 @@ if (php_sapi_name() == "cli") {
 			die("mtime check failed. - For security reasons this script was disabled automatically after a while.\n Please 'touch' me, or set the environment variable 'PCC_DISABLE_MTIME=1' (e.g. 'SetEnv PCC_DISABLE_MTIME 1' for apache/.htaccess)");
 		}
 	}
-	
+
 	// IP check
 	$cfg['REMOTE_ADDR'] = getenv("REMOTE_ADDR");
 	$cfg['PCC_ALLOW_IP'] = getenv("PCC_ALLOW_IP");
 	if ($cfg['REMOTE_ADDR'] !== FALSE) {
 		if (!in_array($cfg['REMOTE_ADDR'], array("127.0.0.1", "::1"), TRUE)
 			&& !($cfg['PCC_ALLOW_IP'] !== FALSE && fnmatch($cfg['PCC_ALLOW_IP'], $cfg['REMOTE_ADDR']))) {
-			die("Access denied. - Your IP is not cleared. Please set PCC_ALLOW_IP to a your IP address or a wildcard pattern, e.g. 'SetEnv PCC_ALLOW_IP 10.0.0.*'");
+			die("Access denied. - Your IP is not cleared. Please set PCC_ALLOW_IP to your IP address or a wildcard pattern, e.g. 'SetEnv PCC_ALLOW_IP 10.0.0.*'");
 		}
 	}
 
@@ -185,7 +185,7 @@ $cfg['is_cgi'] = (substr(php_sapi_name(), 0, 3) === 'cgi');
 
 /*****************************************************************************/
 
-	
+
 // functions
 function tdesc($name, $desc=NULL) {
 	return array(
@@ -323,7 +323,7 @@ function test_all_ini_entries()
 		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
-		
+
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
 		'suhosin.log.syslog' => "Logging to syslog should be used here.",
@@ -636,7 +636,7 @@ function test_all_ini_entries()
 				} elseif (!is_readable($v)) {
 					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
 				}
-			
+
 			}
 			break;
 		case 'docref_root':
@@ -797,7 +797,7 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_HIGH, "Multibyte encodings are active.");
 			}
 			break;
-		
+
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
 			if (is_on($v)) {
@@ -897,7 +897,7 @@ function test_all_ini_entries()
 					list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
 					$recommendation = $helptext['suhosin.*.max_name_length=off'];
 				}
-			break;	
+			break;
 		case 'suhosin.get.max_name_length':
 		case 'suhosin.post.max_name_length':
 		case 'suhosin.cookie.max_name_length':
@@ -1049,7 +1049,7 @@ function test_all_ini_entries()
 				$recommendation = $helptext['suhosin.executor.include.*list'];
 			}
 			break;
-		
+
 		case 'suhosin.filter.action':
 			// $v looks like "302,/var/www/foo.php" but may be as obscure as "3ab, ,;http://foo"
 			if ($v != "" && preg_match('#^\s*(?:\d.*?[,;]+)?[\s,;]*(.*)$#', $v, $matches)) {
@@ -1069,7 +1069,7 @@ function test_all_ini_entries()
 				}
 			}
 			break;
-			
+
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
@@ -1079,7 +1079,7 @@ function test_all_ini_entries()
 			// silently ignore this option
 			$ignore = 1;
 			break;
-	
+
 		/* ===== known, but probably not security relevant ===== */
 		case 'precision':
 		case 'assert.bail':
@@ -1132,14 +1132,14 @@ function test_all_ini_entries()
 		case 'track_errors':
 			list($result, $reason) = array(TEST_OK, "any value is ok");
 			break;
-	
+
 		/* ===== unknown / ignored ===== */
 		default:
 			list($result, $reason) = array(TEST_UNKNOWN, "unknown / not checked.");
 		}
-	
+
 		if ($ignore) { continue; }
-	
+
 		if ($result === NULL) {
 			tres($meta, TEST_OK);
 		} elseif ($result === TEST_SKIPPED) {
@@ -1157,14 +1157,14 @@ test_all_ini_entries();
 function test_pcc_need_update()
 {
 	global $cfg, $pcc_date, $pcc_version;
-	
+
 	if (version_compare(PHP_VERSION, '5.1.0') >= 0) {
 		date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
 	}
 	if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
 		if (time() > strtotime($pcc_date) + (24*3600*60)) { $cfg['need_update'] = 1; }
 	} elseif (time() > strtotime($pcc_date) + (24*3600*180)) { $cfg['need_update'] = 1; }
-	
+
 }
 test_pcc_need_update();
 
@@ -1203,12 +1203,12 @@ test_suhosin_installed();
 function test_log_in_document_root($inientry, $value_if_not_set=null)
 {
 	global $cfg;
-	
+
 	$inivalue = ini_get($inientry);
 	if ($inivalue === "" || $inivalue === false) {
 		$inivalue = $value_if_not_set;
 	}
-	
+
 	$meta = tdesc("$inientry in document root", "Checks if $inientry path is in the current document root");
 	if ($cfg['is_cli']) { tres($meta, TEST_SKIPPED, "CLI"); }
 	elseif ($inivalue === null) { tres($meta, TEST_SKIPPED, "$inientry not set."); }
