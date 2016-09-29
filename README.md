@@ -5,6 +5,10 @@ Check current PHP configuration for potential security flaws.
 
 Simply access this file from your webserver or run on CLI.
 
+Author
+------
+This software was written by Ben Fuhrmannek, [SektionEins GmbH](https://sektioneins.de/), in an effort to automate php.ini checks and spend more time on cheerful tasks.
+
 Idea
 ----
 
@@ -15,8 +19,8 @@ Idea
 * NO complicated/overengineered code, e.g. no classes/interfaces, test-frameworks, libraries, ... -> It is supposed to be obvious on first glance - even for novices - how this tool works and what it does!
 * NO (or very few) dependencies
 
-Usage
------
+Usage / Installation
+--------------------
 
 * **CLI**: Simply call `php phpconfigcheck.php`. That's it. Add `-a` to see hidden results as well, `-h` for HTML output and `-j` for JSON output.
 
@@ -50,7 +54,6 @@ WARNING
 This tool will only support you setting up a secure PHP environment.
 Nothing else. Your setup, software or any related configuration may still
 be vulnerable, even if this tool's output suggests otherwise.
-
 
 Notes
 -----
