@@ -1333,6 +1333,18 @@ function test_godmode()
 }
 test_godmode();
 
+// test for xdebug extension
+function test_xdebug()
+{
+	$meta = tdesc("xdebug", "Test for loaded xdebug extension");
+	if (extension_loaded('xdebug')) {
+		tres($meta, TEST_HIGH, "xdebug extension loaded.", "The xdebug extension can reveal code and data to an attacker and may have an impact on application performance, too. Please deactivate this extension in a production deployment.");
+	} else {
+		tres($meta, TEST_OK, "not loaded.");
+	}
+}
+test_xdebug();
+
 /*****************************************************************************/
 
 
