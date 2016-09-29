@@ -1162,8 +1162,8 @@ function test_pcc_need_update()
 		date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
 	}
 	if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
-		if (time() > strtotime($pcc_date) + (24*3600*60)) { $cfg['need_update'] = 1; }
-	} elseif (time() > strtotime($pcc_date) + (24*3600*180)) { $cfg['need_update'] = 1; }
+		if (time() > strtotime($pcc_date) + (24*3600*90)) { $cfg['need_update'] = 1; }
+	} elseif (time() > strtotime($pcc_date) + (24*3600*270)) { $cfg['need_update'] = 1; }
 
 }
 test_pcc_need_update();
