@@ -70,6 +70,16 @@ define("TEST_OK", "ok"); // everything is fine. move along.
 define("TEST_SKIPPED", "skipped"); // probably not applicable here.
 define("TEST_UNKNOWN", "unknown"); // something is unknown.
 
+//bash color codes
+define("TEST_CRITICAL_BASH_COLOR", "0;31"); //red
+define("TEST_HIGH_BASH_COLOR", "1;31"); //light red
+define("TEST_MEDIUM_BASH_COLOR", "1;33"); //yellow
+define("TEST_LOW_BASH_COLOR", "1;32"); //light green
+define("TEST_MAYBE_BASH_COLOR", "0;36"); //cyan
+define("TEST_COMMENT_BASH_COLOR", "1;36"); //light cyan
+define("TEST_OK_BASH_COLOR", "0;32"); //green
+define("TEST_SKIPPED_BASH_COLOR", "0;37"); //gray
+define("TEST_UNKNOWN_BASH_COLOR", "1;37"); //dark gray
 // globals
 $cfg = array(	'output_type' => 'text',
 				'allowed_output_types' => array('text', 'html'),
@@ -1351,6 +1361,13 @@ test_xdebug();
 
 /*****************************************************************************/
 
+function colorize_bash_output($result){
+    $all_const = get_defined_constants(TRUE);
+    //find const name by value
+    $const = array_search($result,$all_const['user']);
+    return implode(array("\033[", constant($const . "_BASH_COLOR"), "m", $result, "\033[0m"));
+}
+
 
 // output
 if ($cfg['output_type'] == "text") {
@@ -1359,8 +1376,8 @@ if ($cfg['output_type'] == "text") {
 	foreach ($all_result_codes as $sev) {
 		if (!$cfg['showall'] && !in_array($sev, $cfg['result_codes_default'], true)) { continue; }
 		if (!isset($trbs[$sev]) || !$trbs[$sev]) {continue;}
-		foreach ($trbs[$sev] as $res) {
-			echo sprintf("[%-8s] %s\n", $res['result'], $res['name']);
+        foreach ($trbs[$sev] as $res) {
+                       echo sprintf("[%-8s] %s\n", colorize_bash_output($res['result']), $res['name']);
 			echo "  " . $res['reason'] . "\n  " . $res['recommendation'] . "\n";
 		}
 	}
