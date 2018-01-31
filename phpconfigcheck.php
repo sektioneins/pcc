@@ -53,8 +53,8 @@
 
 $pcc_name = "PHP Secure Configuration Checker";
 $pcc_version = "0.1-dev9";
-$pcc_copy = "(c) 2015-2017 SektionEins GmbH / Ben Fuhrmannek";
-$pcc_date = "2017-08-15"; // release date for update check
+$pcc_copy = "(c) 2015-2018 SektionEins GmbH / Ben Fuhrmannek";
+$pcc_date = "2018-01-31"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
 
 /*****************************************************************************/
@@ -71,15 +71,16 @@ define("TEST_SKIPPED", "skipped"); // probably not applicable here.
 define("TEST_UNKNOWN", "unknown"); // something is unknown.
 
 //bash color codes
-define("TEST_CRITICAL_BASH_COLOR", "0;31"); //red
-define("TEST_HIGH_BASH_COLOR", "1;31"); //light red
-define("TEST_MEDIUM_BASH_COLOR", "1;33"); //yellow
-define("TEST_LOW_BASH_COLOR", "1;32"); //light green
-define("TEST_MAYBE_BASH_COLOR", "0;36"); //cyan
-define("TEST_COMMENT_BASH_COLOR", "1;36"); //light cyan
-define("TEST_OK_BASH_COLOR", "0;32"); //green
-define("TEST_SKIPPED_BASH_COLOR", "0;37"); //gray
-define("TEST_UNKNOWN_BASH_COLOR", "1;37"); //dark gray
+define("ANSI_COLOR_critical", "0;31"); //red
+define("ANSI_COLOR_high", "1;31"); //light red
+define("ANSI_COLOR_medium", "1;33"); //yellow
+define("ANSI_COLOR_low", "1;32"); //light green
+define("ANSI_COLOR_maybe", "0;36"); //cyan
+define("ANSI_COLOR_comment", "1;36"); //light cyan
+define("ANSI_COLOR_ok", "0;32"); //green
+define("ANSI_COLOR_skipped", "0;37"); //gray
+define("ANSI_COLOR_unknown", "1;37"); //dark gray
+
 // globals
 $cfg = array(	'output_type' => 'text',
 				'allowed_output_types' => array('text', 'html'),
@@ -1361,11 +1362,16 @@ test_xdebug();
 
 /*****************************************************************************/
 
-function colorize_bash_output($result){
-    $all_const = get_defined_constants(TRUE);
-    //find const name by value
-    $const = array_search($result,$all_const['user']);
-    return implode(array("\033[", constant($const . "_BASH_COLOR"), "m", $result, "\033[0m"));
+if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
+	function colorize_result($result){
+	    ;
+		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
+			return "\033[${color}m$result\033[0m";
+		}
+		return $result;
+	}
+} else {
+	function colorize_result($result) { return $result; }
 }
 
 
@@ -1376,8 +1382,8 @@ if ($cfg['output_type'] == "text") {
 	foreach ($all_result_codes as $sev) {
 		if (!$cfg['showall'] && !in_array($sev, $cfg['result_codes_default'], true)) { continue; }
 		if (!isset($trbs[$sev]) || !$trbs[$sev]) {continue;}
-        foreach ($trbs[$sev] as $res) {
-                       echo sprintf("[%-8s] %s\n", colorize_bash_output($res['result']), $res['name']);
+		foreach ($trbs[$sev] as $res) {
+			echo sprintf("[%-8s] %s\n", colorize_result($res['result']), $res['name']);
 			echo "  " . $res['reason'] . "\n  " . $res['recommendation'] . "\n";
 		}
 	}
