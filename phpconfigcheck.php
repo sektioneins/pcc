@@ -52,7 +52,7 @@
 /*****************************************************************************/
 
 $pcc_name = "PHP Secure Configuration Checker";
-$pcc_version = "0.1-dev9";
+$pcc_version = "0.1-dev10";
 $pcc_copy = "(c) 2015-2018 SektionEins GmbH / Ben Fuhrmannek";
 $pcc_date = "2018-01-31"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
