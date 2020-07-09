@@ -1205,6 +1205,8 @@ function test_suhosin_installed()
 	$meta = tdesc("Suhosin", "Checks whether the Suhosin-Extension is loaded");
 	if (extension_loaded("suhosin")) {
 		tres($meta, TEST_OK);
+	} else if (PHP_MAJOR_VERSION >= 7) {
+		tres($meta, TEST_SKIPPED, "Suhosin is not available for PHP newer than 7.0");
 	} else if (defined('HHVM_VERSION')) {
 		tres($meta, TEST_SKIPPED, "Suhosin is not available for HHVM.");
 	} else {
