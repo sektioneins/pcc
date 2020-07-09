@@ -82,6 +82,7 @@ define("ANSI_COLOR_skipped", "0;37"); //gray
 define("ANSI_COLOR_unknown", "1;37"); //dark gray
 
 // globals
+$last_supported_version = 7.2;
 $cfg = array(	'output_type' => 'text',
 				'allowed_output_types' => array('text', 'html'),
 				'showall' => 0,
@@ -1359,6 +1360,18 @@ function test_xdebug()
 	}
 }
 test_xdebug();
+
+// test for unsupported php version
+function test_unsupported()
+{
+	$meta = tdesc("supported version", "Test for supported php version");
+	if (version_compare(PHP_VERSION, $last_supported_version) ) {
+		tres($meta, TEST_HIGH, "Outdated PHP version", "You're currently running " . PHP_VERSION .", which is older than than the latest supported one (" . $last_supported_version. "), you should upgrade it.");
+	} else {
+		tres($meta, TEST_OK, "running a supported php version.");
+	}
+}
+test_unsupported();
 
 /*****************************************************************************/
 
