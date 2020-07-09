@@ -1364,7 +1364,6 @@ test_xdebug();
 
 if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
-	    ;
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
 			return "\033[${color}m$result\033[0m";
 		}
@@ -1387,15 +1386,10 @@ if ($cfg['output_type'] == "text") {
 			echo "  " . $res['reason'] . "\n  " . $res['recommendation'] . "\n";
 		}
 	}
-
-
 } elseif ($cfg['output_type'] == "json") {
-
 	echo json_encode($trbs);
-
 } elseif ($cfg['output_type'] == "html") {
 	function e($str) { return htmlentities($str, ENT_QUOTES); }
-
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -1461,11 +1455,10 @@ img {
 	foreach ($all_result_codes as $sev) {
 		if (!$cfg['showall'] && !in_array($sev, $cfg['result_codes_default'], true)) { continue; }
 		if (!isset($trbs[$sev])) {continue;}
-	?>
-		<td class="<?php echo $sev; ?>"><?php echo $sev; ?>: <?php echo count($trbs[$sev]); ?></td>
-	<?php
+		echo "<td class=\"" . $sev . "\">" . $sev . ": " . count($trbs[$sev]) . "</td>";
 	}
-	?></tr></table>
+	?>
+	</tr></table>
 
 	<table class="t">
 	<tr>
