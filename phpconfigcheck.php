@@ -1213,6 +1213,22 @@ function test_suhosin_installed()
 }
 test_suhosin_installed();
 
+// snuffleupagus installed?
+function test_snuffleupagus_installed()
+{
+	$meta = tdesc("Snuffleupagus", "Checks whether the Snuffleupagus extension is loaded");
+	if (extension_loaded("snuffleupagus")) {
+		tres($meta, TEST_OK);
+	} else if (PHP_MAJOR_VERSION < 7) {
+		tres($meta, TEST_SKIPPED, "Snuffleupagus isn't available for PHP < 7");
+	} else if (defined('HHVM_VERSION')) {
+		tres($meta, TEST_SKIPPED, "Snuffleupagus is not available for HHVM.");
+	} else {
+		tres($meta, TEST_MAYBE, "The Snuffleupagus extension is not loaded", "Snuffleupagus is an advanced protection system for PHP7+. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see https://snuffleupagus.rtfd.io");
+	}
+}
+test_snuffleupagus_installed();
+
 
 // logfile inside document root?
 function test_log_in_document_root($inientry, $value_if_not_set=null)
