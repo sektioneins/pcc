@@ -334,6 +334,7 @@ function test_all_ini_entries()
 		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
+		'ffi.enabled' => "FFI should be disabled, or at least set to `preload`",
 
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -808,6 +809,10 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_HIGH, "Multibyte encodings are active.");
 			}
 			break;
+		case 'ffi.enabled':
+			if (is_on($v)) {
+				list($result, $reason) = array(TEST_HIGH, "is set.")
+			}
 
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
