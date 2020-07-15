@@ -1366,7 +1366,6 @@ test_xdebug();
 
 if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
-	    ;
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
 			return "\033[${color}m$result\033[0m";
 		}
@@ -1375,7 +1374,6 @@ if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
 } else {
 	function colorize_result($result) { return $result; }
 }
-
 
 // output
 if ($cfg['output_type'] == "text") {
@@ -1389,15 +1387,10 @@ if ($cfg['output_type'] == "text") {
 			echo "  " . $res['reason'] . "\n  " . $res['recommendation'] . "\n";
 		}
 	}
-
-
 } elseif ($cfg['output_type'] == "json") {
-
 	echo json_encode($trbs);
-
 } elseif ($cfg['output_type'] == "html") {
 	function e($str) { return htmlentities($str, ENT_QUOTES); }
-
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
