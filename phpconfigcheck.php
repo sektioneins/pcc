@@ -1205,10 +1205,10 @@ function test_suhosin_installed()
 	$meta = tdesc("Suhosin", "Checks whether the Suhosin-Extension is loaded");
 	if (extension_loaded("suhosin")) {
 		tres($meta, TEST_OK);
-	} else if (PHP_MAJOR_VERSION >= 7) {
-		tres($meta, TEST_SKIPPED, "Suhosin is not available for PHP newer than 7.0");
 	} else if (defined('HHVM_VERSION')) {
 		tres($meta, TEST_SKIPPED, "Suhosin is not available for HHVM.");
+	} else if (PHP_MAJOR_VERSION >= 7) {
+		tres($meta, TEST_SKIPPED, "Suhosin is not available for PHP 7.0 and above.");
 	} else {
 		tres($meta, TEST_MAYBE, "Suhosin extension is not loaded", "Suhosin is an advanced protection system for PHP. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see http://suhosin.org/");
 	}
