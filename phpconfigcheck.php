@@ -789,7 +789,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'intl.error_level':
-			if (intval($v) | E_ERROR) {
+			if (intval($v) & E_ERROR) {
 				list($result, $reason) = array(TEST_MAYBE, "ICU functions fail with error.");
 			}
 			break;
