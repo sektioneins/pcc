@@ -642,7 +642,7 @@ function test_all_ini_entries()
 			break;
 		case 'curl.cainfo':
 			if ($v !== "") {
-				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $is_win && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
+				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $cfg['is_win'] && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
 					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO must be an absolute path.");
 				} elseif (!is_readable($v)) {
 					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
