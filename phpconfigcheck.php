@@ -1364,7 +1364,7 @@ test_xdebug();
 
 /*****************************************************************************/
 
-if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
+if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
 			return "\033[${color}m$result\033[0m";
