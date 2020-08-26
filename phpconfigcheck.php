@@ -1246,7 +1246,7 @@ function test_log_in_document_root($inientry, $value_if_not_set=null)
 }
 test_log_in_document_root('error_log');
 test_log_in_document_root('mail.log');
-test_log_in_document_root('suhosin.log.file.name');
+if (extension_loaded('suhosin')) { test_log_in_document_root('suhosin.log.file.name'); }
 test_log_in_document_root('upload_tmp_dir', sys_get_temp_dir());
 
 
