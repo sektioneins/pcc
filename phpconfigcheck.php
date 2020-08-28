@@ -294,6 +294,7 @@ function test_all_ini_entries()
 		'session.cookie_httponly' => "This option controls if cookies are tagged with httpOnly which makes them accessible by HTTP only and not by the JavaScript. httpOnly cookies are supported by all major browser vendors and therefore can be instrumental in minimising the danger of session hijacking. It should either be activated here or in your application with session_set_cookie_params().",
 		'session.cookie_secure' => "This option controls if cookies are tagged as secure and should therefore be sent over SSL encrypted connections only. It should either be activated here or in your application with session_set_cookie_params().",
 		'session.cookie_lifetime' => "Not limiting the cookie lifetime increases the chance for an attacker to be able to steal the session cookie. Depending on your application, this should be set to a reasonable value here or with session_set_cookie_params().",
+		'session.cookie_samesite' => "Set SameSite to `Lax` or `Strict` to better protect against CSRF.",
 		'session.referer_check' => "PHP can invalidate a session ID if the submitted HTTP Referer does not contain a configured substring. The Referer can be set by a custom client/browser or plugins (e.g. Flash, Java). However it may prevent some cases of CSRF attacks, where the attacker can not control the client's Referer.",
 		'session.use_strict_mode' => "If activated, PHP will regenerate unknown session IDs. This effectively counteracts session fixation attacks.",
 		'session.use_cookies' => "If activated, PHP will store the session ID in a cookie on the client side. This is recommended.",
@@ -566,6 +567,13 @@ function test_all_ini_entries()
 		case 'session.cookie_lifetime':
 			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_MAYBE, "no implicit lifetime for session cookie.");
+			}
+			break;
+		case 'session.cookie_samesite':
+			if ($v == "") {
+				list($result, $reason) = array(TEST_MAYBE, "SameSite is unset.");
+			} elseif ($v !== "Strict") {
+				list($result, $reason) = array(TEST_COMMENT, "SameSite is not set to `Strict`. If cross-site GET requests to your site are unlikely, this should be set to `Strict`.");
 			}
 			break;
 		case 'session.referer_check':
