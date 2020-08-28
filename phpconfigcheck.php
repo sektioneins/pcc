@@ -334,7 +334,8 @@ function test_all_ini_entries()
 		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
-		"phar.readonly" => "The creation and modification of phar files should be disabled in production",
+		"phar.readonly" => "The creation and modification of phar files should be disabled in production.",
+		'phar.require_hash' => "Signature validation for phar archives should be enforced.",
 
 		/* Suhosin */
 		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
@@ -643,7 +644,7 @@ function test_all_ini_entries()
 			break;
 		case 'curl.cainfo':
 			if ($v !== "") {
-				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $is_win && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
+				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $cfg['is_win'] && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
 					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO must be an absolute path.");
 				} elseif (!is_readable($v)) {
 					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
@@ -790,7 +791,7 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'intl.error_level':
-			if (intval($v) | E_ERROR) {
+			if (intval($v) & E_ERROR) {
 				list($result, $reason) = array(TEST_MAYBE, "ICU functions fail with error.");
 			}
 			break;
@@ -812,6 +813,10 @@ function test_all_ini_entries()
 		case 'phar.readonly':
 			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "Phar files aren't readonly.");
+      break;
+		case 'phar.require_hash':
+			if (!is_on($v)) {
+				list($result, $reason) = array(TEST_LOW, "Signature check for phar is disabled.");
 			}
 			break;
 
@@ -1189,15 +1194,15 @@ test_pcc_need_update();
 // old php version?
 function test_old_php_version()
 {
-	$meta = tdesc("PHP Version", "Checks whether your PHP version is < 5.6");
-	if (version_compare(PHP_VERSION, '5.6.0') >= 0) {
+	$meta = tdesc("PHP Version", "Checks whether your PHP version is unsupported");
+	if (version_compare(PHP_VERSION, '7.2') >= 0) {
 		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-	} elseif (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-		tres($meta, TEST_HIGH, "PHP version is older than 5.5",
-			"PHP 5.5 reached its end of life on 21 Jul 2016. " .
+	} elseif (version_compare(PHP_VERSION, '7.0') >= 0) {
+		tres($meta, TEST_HIGH, "PHP version is older than 7.2",
+			"PHP 7.0 and 7.1 reached end of life in 2019. " .
 			"While this version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
 	} else {
-		tres($meta, TEST_HIGH, "PHP version is older than 5.6 and even older than 5.5",
+		tres($meta, TEST_CRITICAL, "PHP version is older than 7.0",
 			"Please upgrade PHP as soon as possible. " .
 			"Old versions of PHP are not maintained anymore and may contain security flaws.");
 	}
@@ -1213,6 +1218,8 @@ function test_suhosin_installed()
 		tres($meta, TEST_OK);
 	} else if (defined('HHVM_VERSION')) {
 		tres($meta, TEST_SKIPPED, "Suhosin is not available for HHVM.");
+	} else if (PHP_MAJOR_VERSION >= 7) {
+		tres($meta, TEST_SKIPPED, "Suhosin is not available for PHP 7.0 and above.");
 	} else {
 		tres($meta, TEST_MAYBE, "Suhosin extension is not loaded", "Suhosin is an advanced protection system for PHP. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see http://suhosin.org/");
 	}
@@ -1250,7 +1257,7 @@ function test_log_in_document_root($inientry, $value_if_not_set=null)
 }
 test_log_in_document_root('error_log');
 test_log_in_document_root('mail.log');
-test_log_in_document_root('suhosin.log.file.name');
+if (extension_loaded('suhosin')) { test_log_in_document_root('suhosin.log.file.name'); }
 test_log_in_document_root('upload_tmp_dir', sys_get_temp_dir());
 
 
@@ -1368,9 +1375,8 @@ test_xdebug();
 
 /*****************************************************************************/
 
-if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
+if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
-	    ;
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
 			return "\033[${color}m$result\033[0m";
 		}
@@ -1379,7 +1385,6 @@ if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
 } else {
 	function colorize_result($result) { return $result; }
 }
-
 
 // output
 if ($cfg['output_type'] == "text") {
@@ -1393,15 +1398,10 @@ if ($cfg['output_type'] == "text") {
 			echo "  " . $res['reason'] . "\n  " . $res['recommendation'] . "\n";
 		}
 	}
-
-
 } elseif ($cfg['output_type'] == "json") {
-
 	echo json_encode($trbs);
-
 } elseif ($cfg['output_type'] == "html") {
 	function e($str) { return htmlentities($str, ENT_QUOTES); }
-
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
