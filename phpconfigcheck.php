@@ -334,7 +334,7 @@ function test_all_ini_entries()
 		'last_modified' => "The Last-Modified header will be sent for PHP scripts. This is a minor information disclosure.",
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
-		"phar.readonly" => "The creation and modification of phar files should be disabled in production.",
+		'phar.readonly' => "The creation and modification of phar files should be disabled in production.",
 		'phar.require_hash' => "Signature validation for phar archives should be enforced.",
 
 		/* Suhosin */
@@ -813,7 +813,8 @@ function test_all_ini_entries()
 		case 'phar.readonly':
 			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "Phar files aren't readonly.");
-      break;
+			}
+			break;
 		case 'phar.require_hash':
 			if (!is_on($v)) {
 				list($result, $reason) = array(TEST_LOW, "Signature check for phar is disabled.");
