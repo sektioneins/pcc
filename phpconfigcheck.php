@@ -828,6 +828,10 @@ function test_all_ini_entries()
 				list($result, $reason) = array(TEST_LOW, "Signature check for phar is disabled.");
 			}
 			break;
+		case 'ffi.enable':
+			if (is_on($v)){
+				list($result, $reason) = array(TEST_MEDIUM, "FFI is enabled.");
+			}
 
 		/* ===== Suhosin ===== */
 		case 'suhosin.simulation':
