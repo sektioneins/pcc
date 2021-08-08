@@ -31,7 +31,7 @@
     See LICENSE file for fulltext version of the license.
 
 [+] Copyright Notes:
-    Some text fragments have been copied from the printed PHP Web Security
+    Some text fragments were copied from the printed PHP Web Security
     Poster with permission. - (C) 2009 SektionEins GmbH
     - Concept: Stefan Esser, fukami, Ben Fuhrmannek
 
@@ -52,9 +52,9 @@
 /*****************************************************************************/
 
 $pcc_name = "PHP Secure Configuration Checker";
-$pcc_version = "0.1-dev11";
-$pcc_copy = "(c) 2015-2020 SektionEins GmbH / Ben Fuhrmannek";
-$pcc_date = "2020-08-28"; // release date for update check
+$pcc_version = "0.1-dev12";
+$pcc_copy = "(c) 2015-2021 SektionEins GmbH / Ben Fuhrmannek";
+$pcc_date = "2021-08-06"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
 
 /*****************************************************************************/
@@ -336,38 +336,7 @@ function test_all_ini_entries()
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
 		'phar.readonly' => "The creation and modification of phar files should be disabled in production.",
-		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security.",
-
-		/* Suhosin */
-		'suhosin.simulation' => "During initial deployment of Suhosin, this flag should be switched on to ensure that the application continues to work under the new configuration. After carefully evaluating Suhosin's log messages, you may consider switching the simulation mode off.",
-		'suhosin.log.syslog' => "Logging to syslog should be used here.",
-		'suhosin.log.phpscript' => "This should only be used in exceptional cases for classes of errors that could occur during script execution.",
-		'suhosin.executor.max_depth' => "Defines the maximum stack depth that is permitted during the execution of PHP scripts. If the stack depth is exceeded, the script will be terminated. This setting should be set to a value that does not interfere with the application, but at the same time does not allow to crash the PHP interpreter, e.g. 500.",
-		'suhosin.executor.include.max_traversal' => "Defines how often '../' may occur in filenames for include-statements before it is considered to be an attack. A value of zero deactivates the feature. Most PHP-applications do not require a value greater than 5.",
-		'suhosin.*.cryptkey' => "This protection is less effective with a weak key. Please generate a stronger passphrase, e.g. with 'apg -m 32'.",
-		'suhosin.cookie.encrypt=on' => "Be aware, that even encrypted cookie values are still user input and cannot be trusted without proper input handling.",
-		'suhosin.cookie.encrypt=off' => "Suhosin can transparently encrypt cookies. This feature makes attacks based on tampering with a cookie value much harder. If at all possible, this feature should always be activated.",
-		'suhosin.*.disallow_nul' => "Unless binary data is handled unencoded - which would be very obscure - this feature wants to remain enabled.",
-		'suhosin.*.max_value_length=off' => "By disabling this protection PHP will be exposed to input variables of arbitrary length. It is highly recommended to set this value to the maximum length one variable is supposed to have. With file uploads in mind, request and post limits can be set to a high value.",
-		'suhosin.*.max_value_length=default' => "The default value set as maximum length for each variable may be too small for some applications.",
-		'suhosin.*.disallow_ws' => "Unless your application needs variable names to start with whitespace, please consider turning this option on.",
-		'suhosin.*.max_name_length=off' => "The variable name length should be limited. Please set an appropriate value, e.g. 64.",
-		'suhosin.*.max_array_depth=off' => "The array depth should be limited to avoid denial of service. A reasonable value is 50.",
-		'suhosin.*.max_array_index_length=off' => "The array index length should be limited to avoid denial of s ervice. The default value of 64 is recommended.",
-		'suhosin.*.max_totalname_length=off' => "The variable name length should be limited to a reasonable value, e.g. 256.",
-		'suhosin.*.max_vars=off' => "The number of user supplied input variables should be limited. Reasonable values depend on your application and may go up to 100 or 1000.",
-		'suhosin.*script/writable' => "An attacker may try to inject code into the logging/upload script. Better change file permissions to read-only access.",
-		'suhosin.*script/chmod' => "The logging or upload script is not set writable, but the current user has the right to change its access permission. Please change the file's owner.",
-		'debugonly' => "This feature is for debugging only. Please deactivate.",
-		'suhosin.disable.display_errors' => "In PHP enabling display_errors is one of the major causes for information disclosure. For example, an attacker may gather information about the document root, SQL queries, class names, function names, version numbers and in rare cases even login credentials or session IDs. Suhosin is able to deactivate display_errors entirely. You should make use of this feature.",
-		'suhosin.executor.allow_symlink' => "Allowing symlinks while using open_basedir is actually a security risk. Only use this option if you know exactly what you are doing.",
-		'suhosin.executor.disable_emodifier' => "Using the /e modifier with preg_replace() can eval code. An attacker may try to inject the /e modifier or code to evaluate. If your application does not need the /e modifier, it is best to deactivate it here. As of PHP 5.5.0 the /e modifier has been deprecated and should no longer be used anyway.",
-		'suhosin.executor.disable_eval' => "Using eval() with user input is one of the most dangerous security issues in PHP. If eval() is not needed, it should be deactivated.",
-		'suhosin.executor.*.*list' => "It is recommended to disable harmful functions by setting a suitable whitelist or blacklist.",
-		'suhosin.executor.include.allow_writable_files' => "Turn this flag off to prevent PHP from executing writable PHP files. This is a very effective protection against code execution that was uploaded by an attacker before. Note: Some software such as web-installers or web-based plugin installers won't work out of the box with this flag turned off.",
-		'suhosin.executor.include.*list' => "Usually it is a good idea to disable URL includes entirely by leaving both whitelist and blacklist empty. Remote content can be loaded and validated in a secure manner e.g. by using cURL.",
-		'suhosin.filter.action=missing' => "The file configured to be included upon Suhosin filter violations is missing.",
-		'suhosin.filter.action=writable' => "The file configured to be included upon Suhosin filter violations is writable or may become writable with current user rights."
+		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security."
 	);
 
 	// php.ini checks
@@ -829,283 +798,10 @@ function test_all_ini_entries()
 			}
 			break;
 
-		/* ===== Suhosin ===== */
-		case 'suhosin.simulation':
-			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "Suhosin is in simulation mode.");
-			}
-			break;
-		case 'suhosin.log.syslog':
-			if ($v === NULL || $v === "" || $v == "0") {
-				// emty string can be the default value or explicitly unset. -> assume unset.
-				list($result, $reason) = array(TEST_COMMENT, "Suhosin doesn't log to syslog.");
-			}
-			break;
-		case 'suhosin.log.phpscript':
-			if ($v !== NULL && $v != "0" && ini_get('suhosin.log.phpscript.name') != "") {
-				list($result, $reason) = array(TEST_COMMENT, "PHP-script for logging.");
-			}
-			break;
-		case 'suhosin.executor.max_depth':
-			if (intval($v) == 0) {
-				list($result, $reason) = array(TEST_LOW, "stack depth not limited.");
-			}
-			break;
-		case 'suhosin.executor.include.max_traversal':
-			if (intval($v) == 0) {
-				list($result, $reason) = array(TEST_LOW, "path traversal (include) not limited.");
-			}
-			break;
-		case 'suhosin.cookie.cryptkey':
-		case 'suhosin.session.cryptkey':
-			$tmp = explode('.', $k);
-			if (ini_get('suhosin.'. $tmp[1] . '.encrypt')) {
-				if ($v === "") {
-					list($result, $reason) = array(TEST_HIGH, "encryption used, but key not set.");
-					$recommendation = $helptext['suhosin.*.cryptkey'];
-				} elseif (strlen($v) < 16) {
-					list($result, $reason) = array(TEST_MEDIUM, "key is very short.");
-					$recommendation = $helptext['suhosin.*.cryptkey'];
-				}
-			}
-			break;
-		case 'suhosin.cookie.encrypt':
-			if (is_on($v)) {
-				list($result, $reason) = array(TEST_COMMENT, "cookie encryption on.");
-				$recommendation = $helptext['suhosin.cookie.encrypt=on'];
-			} else {
-				list($result, $reason) = array(TEST_MEDIUM, "cookie encryption off.");
-				$recommendation = $helptext['suhosin.cookie.encrypt=off'];
-			}
-			break;
-		case 'suhosin.cookie.disallow_nul':
-		case 'suhosin.get.disallow_nul':
-		case 'suhosin.post.disallow_nul':
-		case 'suhosin.request.disallow_nul':
-			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "nul-protection off.");
-				$recommendation = $helptext['suhosin.*.disallow_nul'];
-			}
-			break;
-		case 'suhosin.get.disallow_ws':
-		case 'suhosin.post.disallow_ws':
-		case 'suhosin.cookie.disallow_ws':
-			if (!is_on($v) && !is_on(ini_get('suhosin.request.disallow_ws'))) {
-				list($result, $reason) = array(TEST_LOW, "default value.");
-				$recommendation = $helptext['suhosin.*.disallow_ws'];
-			}
-			break;
-		case 'suhosin.request.max_value_length':
-			if (intval($v) == 0 &&
-					(intval(ini_get('suhosin.get.max_value_length')) == 0 ||
-					intval(ini_get('suhosin.post.max_value_length')) == 0 ||
-					intval(ini_get('suhosin.cookie.max_value_length')) == 0)) {
-				list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
-				$recommendation = $helptext['suhosin.*.max_value_length=off'];
-			} elseif (intval($v) == 1000000) { // default value
-				list($result, $reason) = array(TEST_COMMENT, "default value.");
-				$recommendation = $helptext['suhosin.*.max_value_length=default'];
-			}
-			break;
-		case 'suhosin.get.max_value_length':
-		case 'suhosin.post.max_value_length':
-		case 'suhosin.cookie.max_value_length':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_value_length')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "value length not limited.");
-				$recommendation = $helptext['suhosin.*.max_value_length=off'];
-			} elseif ($k === 'suhosin.get.max_value_length' && intval($v) == 512 ||
-					$k == 'suhosin.post.max_value_length' && intval($v) == 1000000 ||
-					$k == 'suhosin.cookie.max_value_length' && intval($v) == 10000) { // default value
-				list($result, $reason) = array(TEST_COMMENT, "default value.");
-				$recommendation = $helptext['suhosin.*.max_value_length=default'];
-			}
-			break;
-		case 'suhosin.request.max_varname_length':
-			if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_name_length')) == 0 ||
-				intval(ini_get('suhosin.post.max_name_length')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_name_length')) == 0)) {
-					list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
-					$recommendation = $helptext['suhosin.*.max_name_length=off'];
-				}
-			break;
-		case 'suhosin.get.max_name_length':
-		case 'suhosin.post.max_name_length':
-		case 'suhosin.cookie.max_name_length':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_varname_length')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "varname length not limited.");
-				$recommendation = $helptext['suhosin.*.max_name_length=off'];
-			}
-			break;
-		case 'suhosin.request.max_array_depth':
-			if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_array_depth')) == 0 ||
-				intval(ini_get('suhosin.post.max_array_depth')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_array_depth')) == 0)) {
-					list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
-					$recommendation = $helptext['suhosin.*.max_array_depth=off'];
-				}
-			break;
-		case 'suhosin.get.max_array_depth':
-		case 'suhosin.post.max_array_depth':
-		case 'suhosin.cookie.max_array_depth':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_depth')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "array depth not limited.");
-				$recommendation = $helptext['suhosin.*.max_array_depth=off'];
-			}
-			break;
-		case 'suhosin.request.max_array_index_length':
-			if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_array_index_length')) == 0 ||
-				intval(ini_get('suhosin.post.max_array_index_length')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_array_index_length')) == 0)) {
-					list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
-					$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
-				}
-			break;
-		case 'suhosin.get.max_array_index_length':
-		case 'suhosin.post.max_array_index_length':
-		case 'suhosin.cookie.max_array_index_length':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_array_index_length')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "array index length not limited.");
-				$recommendation = $helptext['suhosin.*.max_array_index_length=off'];
-			}
-			break;
-		case 'suhosin.request.max_totalname_length':
-			if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_totalname_length')) == 0 ||
-				intval(ini_get('suhosin.post.max_totalname_length')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_totalname_length')) == 0)) {
-					list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
-					$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
-				}
-			break;
-		case 'suhosin.get.max_totalname_length':
-		case 'suhosin.post.max_totalname_length':
-		case 'suhosin.cookie.max_totalname_length':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_totalname_length')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "variable name length not limited.");
-				$recommendation = $helptext['suhosin.*.max_totalname_length=off'];
-			}
-			break;
-		case 'suhosin.request.max_vars':
-			if (intval($v) == 0 &&
-				(intval(ini_get('suhosin.get.max_vars')) == 0 ||
-				intval(ini_get('suhosin.post.max_vars')) == 0 ||
-				intval(ini_get('suhosin.cookie.max_vars')) == 0)) {
-					list($result, $reason) = array(TEST_HIGH, "number of request varialbes not limited.");
-					$recommendation = $helptext['suhosin.*.max_vars=off'];
-				}
-			break;
-		case 'suhosin.get.max_vars':
-		case 'suhosin.post.max_vars':
-		case 'suhosin.cookie.max_vars':
-			if (intval($v) == 0 && intval(ini_get('suhosin.request.max_vars')) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "number of variables not limited.");
-				$recommendation = $helptext['suhosin.*.max_vars=off'];
-			}
-			break;
-		case 'suhosin.log.script.name':
-		case 'suhosin.log.phpscript.name':
-		case 'suhosin.upload.verification_script':
-			if ($v !== "") {
-				if (is_writable($v)) {
-					list($result, $reason) = array(TEST_HIGH, "script is writable.");
-					$recommendation = $helptext['suhosin.*script/writable'];
-				} elseif (is_writable_or_chmodable($v)) {
-					list($result, $reason) = array(TEST_HIGH, "script is potentially writable.");
-					$recommendation = $helptext['suhosin.*script/chmod'];
-				}
-			}
-			break;
-		case 'suhosin.coredump':
-		case 'suhosin.log.stdout':
-			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
-				$recommendation = $helptext['debugonly'];
-			}
-			break;
-		case 'suhosin.log.file.time':
-			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "debug option is on.");
-				$recommendation = $helptext['debugonly'];
-			}
-			break;
-		case 'suhosin.disable.display_errors':
-			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "display_errors is not disabled.");
-			}
-			break;
-		case 'suhosin.executor.allow_symlink':
-			if (is_on($v) && ini_get('open_basedir') != "") {
-				list($result, $reason) = array(TEST_MEDIUM, "symlinks enabled.");
-			}
-			break;
-		case 'suhosin.executor.disable_emodifier':
-			if (!is_on($v)) {
-				list($result, $reason) = array((PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5) ? TEST_HIGH : TEST_MAYBE, "preg_replace can eval.");
-			}
-			break;
-		case 'suhosin.executor.disable_eval':
-			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "eval is not disabled.");
-			}
-			break;
-		case 'suhosin.executor.eval.blacklist':
-			if ($v == "" && !is_on(ini_get('suhosin.executor.disable_eval')) && ini_get('suhosin.executor.eval.whitelist') == "") {
-				list($result, $reason) = array(TEST_MAYBE, "whitelist and blacklist not set.");
-				$recommendation = $helptext['suhosin.executor.*.*list'];
-			}
-			break;
-		case 'suhosin.executor.func.blacklist':
-			if ($v == "" && ini_get('suhosin.executor.func.whitelist') == "") {
-				list($result, $reason) = array(TEST_MAYBE, "whitelist and blacklist not set.");
-				$recommendation = $helptext['suhosin.executor.*.*list'];
-			}
-			break;
-		case 'suhosin.executor.eval.whitelist': // handled by blacklist check
-		case 'suhosin.executor.func.whitelist':
-			$ignore = 1;
-			break;
-		case 'suhosin.executor.include.allow_writable_files':
-			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "write + execute enabled.");
-			}
-			break;
-		case 'suhosin.executor.include.blacklist':
-		case 'suhosin.executor.include.whitelist':
-			$v = ini_list($v);
-			if ($v) {
-				list($result, $reason) = array(TEST_MAYBE, "include whitelist/blacklist set.");
-				$recommendation = $helptext['suhosin.executor.include.*list'];
-			}
-			break;
-
-		case 'suhosin.filter.action':
-			// $v looks like "302,/var/www/foo.php" but may be as obscure as "3ab, ,;http://foo"
-			if ($v != "" && preg_match('#^\s*(?:\d.*?[,;]+)?[\s,;]*(.*)$#', $v, $matches)) {
-				if (preg_match('#^http://#', $matches[1])) {
-					// redirect to URL. -> no further check.
-				} else {
-					// includes PHP file
-					if (!file_exists($matches[1])) {
-						// -> problem. file does not exist.
-						list($result, $reason) = array(TEST_HIGH, "filter action file missing");
-						$recommendation = $helptext['suhosin.filter.action=missing'];
-					} elseif (is_writable_or_chmodable($matches[1])) {
-						// -> problem. file is writable or potentially writable.
-						list($result, $reason) = array(TEST_HIGH, "filter action file writable");
-						$recommendation = $helptext['suhosin.filter.action=writable'];
-					}
-				}
-			}
-			break;
-
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
 		case 'mail.log':
-		case 'suhosin.log.file.name':
 		case 'upload_tmp_dir':
 			// silently ignore this option
 			$ignore = 1;
@@ -1147,19 +843,6 @@ function test_all_ini_entries()
 		case 'session.cache_expire':
 		case 'session.cache_limiter':
 		case 'short_open_tag':
-		case 'suhosin.apc_bug_workaround':
-		case 'suhosin.cookie.checkraddr':
-		case 'suhosin.cookie.cryptdocroot':
-		case 'suhosin.cookie.cryptlist':
-		case 'suhosin.cookie.cryptraddr':
-		case 'suhosin.cookie.cryptua':
-		case 'suhosin.cookie.plainlist':
-		case 'suhosin.log.syslog.facility':
-		case 'suhosin.log.syslog.priority':
-		case 'suhosin.log.sapi':
-		case 'suhosin.log.script':
-		case 'suhosin.log.use-x-forwarded-for':
-		case 'suhosin.request.disallow_ws':
 		case 'track_errors':
 			list($result, $reason) = array(TEST_OK, "any value is ok");
 			break;
@@ -1204,36 +887,20 @@ test_pcc_need_update();
 function test_old_php_version()
 {
 	$meta = tdesc("PHP Version", "Checks whether your PHP version is unsupported");
-	if (version_compare(PHP_VERSION, '7.2') >= 0) {
+	if (version_compare(PHP_VERSION, '7.3') >= 0) {
 		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-	} elseif (version_compare(PHP_VERSION, '7.0') >= 0) {
-		tres($meta, TEST_HIGH, "PHP version is older than 7.2",
-			"PHP 7.0 and 7.1 reached end of life in 2019. " .
-			"While this version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
+	} elseif (version_compare(PHP_VERSION, '7.1') >= 0) {
+		tres($meta, TEST_HIGH, "PHP version is older than 7.3",
+			"PHP 7.0 and 7.1 reached end of life in 2019 and 7.2 a year later. " .
+			"While your PHP version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
 	} else {
-		tres($meta, TEST_CRITICAL, "PHP version is older than 7.0",
+		tres($meta, TEST_CRITICAL, "PHP version is older than 7.1",
 			"Please upgrade PHP as soon as possible. " .
 			"Old versions of PHP are not maintained anymore and may contain security flaws.");
 	}
 }
 test_old_php_version();
 
-
-// suhosin installed?
-function test_suhosin_installed()
-{
-	$meta = tdesc("Suhosin", "Checks whether the Suhosin-Extension is loaded");
-	if (extension_loaded("suhosin")) {
-		tres($meta, TEST_OK);
-	} else if (defined('HHVM_VERSION')) {
-		tres($meta, TEST_SKIPPED, "Suhosin is not available for HHVM.");
-	} else if (PHP_MAJOR_VERSION >= 7) {
-		tres($meta, TEST_SKIPPED, "Suhosin is not available for PHP 7.0 and above.");
-	} else {
-		tres($meta, TEST_MAYBE, "Suhosin extension is not loaded", "Suhosin is an advanced protection system for PHP. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see http://suhosin.org/");
-	}
-}
-test_suhosin_installed();
 
 
 // logfile inside document root?
@@ -1266,7 +933,6 @@ function test_log_in_document_root($inientry, $value_if_not_set=null)
 }
 test_log_in_document_root('error_log');
 test_log_in_document_root('mail.log');
-if (extension_loaded('suhosin')) { test_log_in_document_root('suhosin.log.file.name'); }
 test_log_in_document_root('upload_tmp_dir', sys_get_temp_dir());
 
 
