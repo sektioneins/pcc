@@ -1069,6 +1069,18 @@ function test_xdebug()
 }
 test_xdebug();
 
+// test for vld extension
+function test_vld()
+{
+	$meta = tdesc("vld", "Test for loaded vld extension");
+	if (extension_loaded('vld')) {
+		tres($meta, TEST_HIGH, "vld extension loaded.", "The vld extension can reveal code and data to an attacker and may have an impact on application performance, too. Please unload this extension in a production deployment.");
+	} else {
+		tres($meta, TEST_OK, "not loaded.");
+	}
+}
+test_vld();
+
 /*****************************************************************************/
 
 if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
