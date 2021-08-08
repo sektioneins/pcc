@@ -336,7 +336,8 @@ function test_all_ini_entries()
 		'zend.multibyte' => "This is highly unusual. If possible, try to avoid multibyte encodings in source files - like SJIS, BIG5 - and use UTF-8 instead. Most XSS and other injection protections are not aware of multibyte encodings or can easily be confused. In order to use UTF-8, this option can safely be deactivated.",
 		'max_input_vars' => "This setting may be incorrect. Unless your application actually needs an incredible number of input variables, please set this to a reasonable value, e.g. 1000.",
 		'phar.readonly' => "The creation and modification of phar files should be disabled in production.",
-		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security."
+		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security.",
+		'ffi.enable' => "From the PHP documentation: 'FFI is dangerous, since it allows to interface with the system on a very low level. The FFI extension should only be used by developers having a working knowledge of C and the used C APIs.'. Also, this extension is EXPERIMENTAL."
 	);
 
 	// php.ini checks
@@ -799,7 +800,7 @@ function test_all_ini_entries()
 			break;
 		case 'ffi.enable':
 			if (is_on($v)){
-				list($result, $reason) = array(TEST_MEDIUM, "FFI is enabled.");
+				list($result, $reason) = array(TEST_HIGH, "FFI is enabled.");
 			}
 
 		/* ===== known, but extra check below. ===== */
