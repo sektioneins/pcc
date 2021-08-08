@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sektioneins/pcc.svg?branch=master)](https://travis-ci.org/sektioneins/pcc)
+[![Build Status](https://travis-ci.com/sektioneins/pcc.svg?branch=master)](https://travis-ci.com/sektioneins/pcc)
 
 PHP Secure Configuration Checker
 ================================
