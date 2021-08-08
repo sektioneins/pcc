@@ -338,7 +338,7 @@ function test_all_ini_entries()
 		'phar.readonly' => "The creation and modification of phar files should be disabled in production.",
 		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security.",
 		'ffi.enable' => "From the PHP documentation: 'FFI is dangerous, since it allows to interface with the system on a very low level. The FFI extension should only be used by developers having a working knowledge of C and the used C APIs.'. Also, this extension is EXPERIMENTAL.",
-    'runkit.internal_override' => "Runkit can modify/rename/remove internal functions. As most security features rely on internal functions, activating this setting renders all security features useless. In fact, it is best to remove the runkit extension altogether."
+		'runkit.internal_override' => "Runkit can modify/rename/remove internal functions. As most security features rely on internal functions, activating this setting renders all security features useless. In fact, it is best to remove the runkit extension altogether."
 	);
 
 	// php.ini checks
