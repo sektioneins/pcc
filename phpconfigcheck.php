@@ -1062,7 +1062,7 @@ function test_xdebug()
 {
 	$meta = tdesc("xdebug", "Test for loaded xdebug extension");
 	if (extension_loaded('xdebug')) {
-		tres($meta, TEST_HIGH, "xdebug extension loaded.", "The xdebug extension can reveal code and data to an attacker and may have an impact on application performance, too. Please deactivate this extension in a production deployment.");
+		tres($meta, TEST_HIGH, "xdebug extension loaded.", "The xdebug extension can reveal code and data to an attacker and may have an impact on application performance, too. Please unload this extension in a production deployment.");
 	} else {
 		tres($meta, TEST_OK, "not loaded.");
 	}
@@ -1074,6 +1074,9 @@ function test_vld()
 {
 	$meta = tdesc("vld", "Test for loaded vld extension");
 	if (extension_loaded('vld')) {
+		if (is_on(ini_get('vld.active'))) {
+			tres($meta, TEST_CRITICAL, "vld extension loaded and active.", "The vld extension can reveal code and data to an attacker and may have an impact on application performance, too. Please unload this extension in a production deployment.");
+		}
 		tres($meta, TEST_HIGH, "vld extension loaded.", "The vld extension can reveal code and data to an attacker and may have an impact on application performance, too. Please unload this extension in a production deployment.");
 	} else {
 		tres($meta, TEST_OK, "not loaded.");
