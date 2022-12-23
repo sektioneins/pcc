@@ -343,6 +343,7 @@ function test_all_ini_entries()
 
 	// php.ini checks
 	foreach (ini_get_all() as $k => $v) {
+
 		$v = $v["local_value"]; // for compatibility with PHP <5.3.0 ini_get_all() is not called with the second 'detail' parameter.
 
 		$meta = tdesc("php.ini / $k");
@@ -480,6 +481,9 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'request_order':
+					if (is_null($v)){
+		$v = '';
+		}
 			$v = strtoupper($v);
 			if ($v === "GP") {break;} // ok
 			if (strstr($v, 'C') !== FALSE) {
@@ -1095,7 +1099,7 @@ test_vld();
 if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
-			return "\033[${color}m$result\033[0m";
+			return "\033[{$color}m$result\033[0m";
 		}
 		return $result;
 	}
