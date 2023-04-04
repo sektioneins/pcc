@@ -220,7 +220,7 @@ function tres($meta, $result, $reason=NULL, $recommendation=NULL) {
 function ini_atol($val)
 {
 	$ret = intval($val);
-	$val = strtolower($val);
+	$val = strtolower((string)$val);
 	switch (substr($val, -1)) {
 		case 'g': $ret *= 1024;
 		case 'm': $ret *= 1024;
