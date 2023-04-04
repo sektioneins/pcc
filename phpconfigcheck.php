@@ -11,7 +11,7 @@
     * one single file for easy distribution
     * simple tests for each security related ini entry
     * a few other tests - not too complicated though
-    * compatible with PHP >= 5.4, or if possible >= 5.0
+    * compatible with PHP >= 7.x
     * NO complicated/overengineered code, e.g. no classes/interfaces,
       test-frameworks, libraries, ...
         -> It is supposed to be obvious on first glance - even for novices -
@@ -52,10 +52,13 @@
 /*****************************************************************************/
 
 $pcc_name = "PHP Secure Configuration Checker";
-$pcc_version = "0.1-dev13";
-$pcc_copy = "(c) 2015-2021 SektionEins GmbH / Ben Fuhrmannek";
-$pcc_date = "2021-08-06"; // release date for update check
+$pcc_version = "0.2.0";
+$pcc_copy = "(c) 2015-2023 SektionEins GmbH / Ben Fuhrmannek";
+$pcc_date = "2023-04-04"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
+
+/*****************************************************************************/
+PHP_VERSION_ID >= 70100 || die("This version of PCC requires at least PHP 7.1. Please update PHP or check out an older version of PCC -> $pcc_url\n");
 
 /*****************************************************************************/
 
@@ -82,17 +85,17 @@ define("ANSI_COLOR_skipped", "0;37"); //gray
 define("ANSI_COLOR_unknown", "1;37"); //dark gray
 
 // globals
-$cfg = array(	'output_type' => 'text',
-				'allowed_output_types' => array('text', 'html'),
+$cfg = [	'output_type' => 'text',
+				'allowed_output_types' => ['text', 'html'],
 				'showall' => 0,
-				'result_codes_default' => array(TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT),
-				'need_update' => 0);
+				'result_codes_default' => [TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT],
+				'need_update' => 0];
 if (function_exists('json_encode')) {
 	$cfg['allowed_output_types'][] = 'json';
 }
-$all_result_codes = array(TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT, TEST_OK, TEST_SKIPPED, TEST_UNKNOWN);
-$trbs = array(); // test result by severity, e.g. $trbs[TEST_OK][...]
-foreach ($all_result_codes as $v) { $trbs[$v] = array(); }
+$all_result_codes = [TEST_CRITICAL, TEST_HIGH, TEST_MEDIUM, TEST_LOW, TEST_MAYBE, TEST_COMMENT, TEST_OK, TEST_SKIPPED, TEST_UNKNOWN];
+$trbs = []; // test result by severity, e.g. $trbs[TEST_OK][...]
+foreach ($all_result_codes as $v) { $trbs[$v] = []; }
 $cfg['s1_logo'] = "data:image/gif;base64,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";
 $cfg['s1_logo_aa'] = "
             `.-:///:-.` /+-`
@@ -157,7 +160,7 @@ if (php_sapi_name() == "cli") {
 	$cfg['REMOTE_ADDR'] = getenv("REMOTE_ADDR");
 	$cfg['PCC_ALLOW_IP'] = getenv("PCC_ALLOW_IP");
 	if ($cfg['REMOTE_ADDR'] !== FALSE) {
-		if (!in_array($cfg['REMOTE_ADDR'], array("127.0.0.1", "::1"), TRUE)
+		if (!in_array($cfg['REMOTE_ADDR'], ["127.0.0.1", "::1"], TRUE)
 			&& !($cfg['PCC_ALLOW_IP'] !== FALSE && fnmatch($cfg['PCC_ALLOW_IP'], $cfg['REMOTE_ADDR']))) {
 			die("Access denied. - Your IP is not cleared. Please set PCC_ALLOW_IP to your IP address or a wildcard pattern, e.g. 'SetEnv PCC_ALLOW_IP 10.0.0.*'");
 		}
@@ -199,18 +202,18 @@ $cfg['is_cgi'] = (substr(php_sapi_name(), 0, 3) === 'cgi');
 
 // functions
 function tdesc($name, $desc=NULL) {
-	return array(
+	return [
 		"name" => $name,
 		"desc" => $desc,
 		"result" => NULL,
 		"reason" => NULL,
 		"recommendation" => NULL
-	);
+	];
 }
 
 function tres($meta, $result, $reason=NULL, $recommendation=NULL) {
 	global $trbs;
-	$res = array_merge($meta, array("result" => $result, "reason" => $reason, "recommendation" => $recommendation));
+	$res = array_merge($meta, ["result" => $result, "reason" => $reason, "recommendation" => $recommendation]);
 	$trbs[$result][] = $res;
 }
 
@@ -265,7 +268,7 @@ function is_on($v)
 function test_all_ini_entries()
 {
 	global $cfg;
-	$helptext = array(
+	$helptext = [
 		"display_errors" => "Error messages can divulge information about the inner workings of an application and may include private information such as Session-ID, personal data, database structures, source code exerpts. It is recommended to log errors, but not to display them on live systems.",
 		'log_errors' => "While it may be a good idea to avoid logging altogether from a privacy point of view, monitoring the error log of an application can lead to detecting attacks, programming and configuration errors.",
 		'expose_php' => "Knowing the exact PHP version - sometimes including patchlevel and operating system - is a good start for automated attack tools. Best not to share this information.",
@@ -339,12 +342,10 @@ function test_all_ini_entries()
 		'phar.require_hash' => "Signature validation for phar archives should be enforced. In particular having OpenSSL-type Phar signatures can significantly increase security.",
 		'ffi.enable' => "From the PHP documentation: 'FFI is dangerous, since it allows to interface with the system on a very low level. The FFI extension should only be used by developers having a working knowledge of C and the used C APIs.'. Also, this extension is EXPERIMENTAL.",
 		'runkit.internal_override' => "Runkit can modify/rename/remove internal functions. As most security features rely on internal functions, activating this setting renders all security features useless. In fact, it is best to remove the runkit extension altogether."
-	);
+	];
 
 	// php.ini checks
-	foreach (ini_get_all() as $k => $v) {
-		$v = $v["local_value"]; // for compatibility with PHP <5.3.0 ini_get_all() is not called with the second 'detail' parameter.
-
+	foreach (ini_get_all(null, false) as $k => $v) {
 		$meta = tdesc("php.ini / $k");
 		$result = NULL;
 		$reason = NULL;
@@ -355,57 +356,57 @@ function test_all_ini_entries()
 		switch ($k) {
 		case 'display_errors':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "display_errors is on.");
+				[$result, $reason] = [TEST_MEDIUM, "display_errors is on."];
 			}
 			break;
 		case 'display_startup_errors':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "display_startup_errors is on.");
+				[$result, $reason] = [TEST_MEDIUM, "display_startup_errors is on."];
 				$recommendation = $helptext['display_errors'];
 			}
 			break;
 		case 'log_errors':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "You are not logging errors.");
+				[$result, $reason] = [TEST_LOW, "You are not logging errors."];
 			}
 			break;
 		case 'expose_php':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "PHP is exposed by HTTP headers.");
+				[$result, $reason] = [TEST_LOW, "PHP is exposed by HTTP headers."];
 			}
 			break;
 		case 'max_execution_time':
 			if (intval($v) == 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "Execution time is not limited.");
+				[$result, $reason] = [TEST_MEDIUM, "Execution time is not limited."];
 			} elseif (intval($v) >= 300) {
-				list($result, $reason) = array(TEST_LOW, "Execution time limit is rather high.");
+				[$result, $reason] = [TEST_LOW, "Execution time limit is rather high."];
 			}
 			break;
 		case 'max_input_time':
 			if ($v == "-1") {
-				list($result, $reason) = array(TEST_MAYBE, "Input parsing time not limited.");
+				[$result, $reason] = [TEST_MAYBE, "Input parsing time not limited."];
 			}
 			break;
 		case 'max_input_nesting_level':
 			if (intval($v) > 128) {
-				list($result, $reason) = array(TEST_MEDIUM, "Input nesting level extremely high.");
+				[$result, $reason] = [TEST_MEDIUM, "Input nesting level extremely high."];
 			} elseif (intval($v) > 64) {
-				list($result, $reason) = array(TEST_MAYBE, "Input nesting level higher than usual.");
+				[$result, $reason] = [TEST_MAYBE, "Input nesting level higher than usual."];
 			}
 			break;
 		case 'max_input_vars':
 			if (intval($v) > 5000) {
-				list($result, $reason) = array(TEST_MEDIUM, "Extremely high number.");
+				[$result, $reason] = [TEST_MEDIUM, "Extremely high number."];
 			} elseif (intval($v) > 1000) {
-				list($result, $reason) = array(TEST_MAYBE, "Higher number than usual.");
+				[$result, $reason] = [TEST_MAYBE, "Higher number than usual."];
 			}
 			break;
 		case 'memory_limit':
 			$v = ini_atol($v);
 			if ($v < 0) {
-				list($result, $reason) = array(TEST_HIGH, "Memory limit deactivated.");
+				[$result, $reason] = [TEST_HIGH, "Memory limit deactivated."];
 			} elseif (ini_atol($v) >= 128*1024*1024) { // default value
-				list($result, $reason) = array(TEST_MAYBE, "Memory limit is 128M or more.");
+				[$result, $reason] = [TEST_MAYBE, "Memory limit is 128M or more."];
 			}
 			break;
 		case 'post_max_size':
@@ -413,86 +414,87 @@ function test_all_ini_entries()
 			$v = ini_atol($v);
 			if ($tmp < 0) {
 				if ($v >= ini_atol('2G')) {
-					list($result, $reason) = array(TEST_MAYBE, "post_max_size is >= 2G.");
+					[$result, $reason] = [TEST_MAYBE, "post_max_size is >= 2G."];
 				}
 				break;
 			}
 			if ($v > $tmp) {
-				list($result, $reason) = array(TEST_HIGH, "post_max_size is greater than memory_limit.");
+				[$result, $reason] = [TEST_HIGH, "post_max_size is greater than memory_limit."];
 				$recommendation = $helptext['post_max_size>memory_limit'];
 			}
 			break;
 		case 'upload_max_filesize':
 			if ($v === "2M") {
-				list($result, $reason) = array(TEST_COMMENT, "default value.");
+				[$result, $reason] = [TEST_COMMENT, "default value."];
 			} elseif (ini_atol($v) >= ini_atol("2G")) {
-				list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
+				[$result, $reason] = [TEST_MAYBE, "value is rather high."];
 			}
 			break;
 		case 'max_file_uploads':
 			if (intval($v) > 30) {
-				list($result, $reason) = array(TEST_MAYBE, "value is rather high.");
+				[$result, $reason] = [TEST_MAYBE, "value is rather high."];
 			}
 			break;
 		case 'allow_url_fopen':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "fopen() is allowed to open URLs.");
+				[$result, $reason] = [TEST_HIGH, "fopen() is allowed to open URLs."];
 			}
 			break;
 		case 'allow_url_include':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "include/require() can include URLs.");
+				[$result, $reason] = [TEST_HIGH, "include/require() can include URLs."];
 			}
 			break;
 		case 'magic_quotes_gpc':
-			if (get_magic_quotes_gpc()) {
-				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+			if (PHP_MAJOR_VERSION < 8 && get_magic_quotes_gpc()) {
+				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
 				$recommendation = $helptext['magic_quotes'];
 			}
 			break;
 		case 'magic_quotes_runtime':
-			if (get_magic_quotes_runtime()) {
-				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+			if (PHP_MAJOR_VERSION < 8 && get_magic_quotes_runtime()) {
+				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
 				$recommendation = $helptext['magic_quotes'];
 			}
 			break;
 		case 'magic_quotes_sybase':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "magic quotes activated.");
+				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
 				$recommendation = $helptext['magic_quotes'];
 			}
 			break;
 		case 'enable_dl':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "PHP can load extensions during runtime.");
+				[$result, $reason] = [TEST_HIGH, "PHP can load extensions during runtime."];
 			}
 			break;
 		case 'disable_functions':
 			$v = ini_list($v);
 			if (!$v) {
-				list($result, $reason) = array(TEST_MEDIUM, "no functions disabled.");
+				[$result, $reason] = [TEST_MEDIUM, "no functions disabled."];
 			}
 			break;
 		case 'disable_classes':
 			$v = ini_list($v);
 			if (!$v) {
-				list($result, $reason) = array(TEST_MEDIUM, "no classes disabled.");
+				[$result, $reason] = [TEST_MEDIUM, "no classes disabled."];
 			}
 			break;
 		case 'request_order':
-			$v = strtoupper($v);
+			if ($v === null || $v === "") { $v = ini_get("variables_order"); }
+			$v = strtoupper((string)$v);
 			if ($v === "GP") {break;} // ok
 			if (strstr($v, 'C') !== FALSE) {
-				list($result, $reason) = array(TEST_MAYBE, "cookie values in $_REQUEST.");
+				[$result, $reason] = [TEST_MAYBE, "cookie values in \$_REQUEST."];
 			}
 			if (strstr(str_replace('C', $v, ''), 'PG') !== FALSE) {
-				list($result, $reason) = array(TEST_LOW, "GET overrides POST in $_REQUEST.");
+				[$result, $reason] = [TEST_LOW, "GET overrides POST in \$_REQUEST."];
 			}
 			break;
 		case 'variables_order':
 			if ($v === "GPCS") { break; }
 			if ($v !== "EGPCS") {
-				list($result, $reason) = array(TEST_COMMENT, "custom variables_order.");
+				[$result, $reason] = [TEST_COMMENT, "custom variables_order."];
 			} else {
 				$result = TEST_OK; // result set includes default helptext
 			}
@@ -502,131 +504,131 @@ function test_all_ini_entries()
 			break;
 		case 'register_globals':
 			if ($v !== "" && $v !== "0") {
-				list($result, $reason) = array(TEST_CRITICAL, "register_globals is on.");
+				[$result, $reason] = [TEST_CRITICAL, "register_globals is on."];
 			}
 			break;
 		case 'file_uploads':
 			if ($v == "1") {
-				list($result, $reason) = array(TEST_MAYBE, "file uploads are allowed.");
+				[$result, $reason] = [TEST_MAYBE, "file uploads are allowed."];
 			}
 			break;
 		case 'filter.default':
 			if ($v !== "unsafe_raw") {
-				list($result, $reason) = array(TEST_MAYBE, "default input filter set.");
+				[$result, $reason] = [TEST_MAYBE, "default input filter set."];
 			}
 			break;
 		case 'open_basedir':
 			if ($v == "") {
-				list($result, $reason) = array(TEST_LOW, "open_basedir not set.");
+				[$result, $reason] = [TEST_LOW, "open_basedir not set."];
 			}
 			break;
 		case 'session.save_path':
 			if ($v == "") {
-				list($result, $reason) = array(TEST_MAYBE, "session save path not set.");
+				[$result, $reason] = [TEST_MAYBE, "session save path not set."];
 			}
 			break;
 		case 'session.cookie_httponly':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "no implicit httpOnly-flag for session cookie.");
+				[$result, $reason] = [TEST_MAYBE, "no implicit httpOnly-flag for session cookie."];
 			}
 			break;
 		case 'session.cookie_secure':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "no implicit secure-flag for session cookie.");
+				[$result, $reason] = [TEST_MAYBE, "no implicit secure-flag for session cookie."];
 			}
 			break;
 		case 'session.cookie_lifetime':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "no implicit lifetime for session cookie.");
+				[$result, $reason] = [TEST_MAYBE, "no implicit lifetime for session cookie."];
 			}
 			break;
 		case 'session.cookie_samesite':
 			if ($v == "") {
-				list($result, $reason) = array(TEST_MAYBE, "SameSite is unset.");
+				[$result, $reason] = [TEST_MAYBE, "SameSite is unset."];
 			} elseif ($v !== "Strict") {
-				list($result, $reason) = array(TEST_COMMENT, "SameSite is not set to `Strict`. If cross-site GET requests to your site are unlikely, this should be set to `Strict`.");
+				[$result, $reason] = [TEST_COMMENT, "SameSite is not set to `Strict`. If cross-site GET requests to your site are unlikely, this should be set to `Strict`."];
 			}
 			break;
 		case 'session.referer_check':
 			if ($v === "") {
-				list($result, $reason) = array(TEST_COMMENT, "referer check not activated.");
+				[$result, $reason] = [TEST_COMMENT, "referer check not activated."];
 			}
 			break;
 		case 'session.use_strict_mode':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "strict mode not activated.");
+				[$result, $reason] = [TEST_MEDIUM, "strict mode not activated."];
 			}
 			break;
 		case 'session.use_cookies':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "Session ID not stored in cookie.");
+				[$result, $reason] = [TEST_HIGH, "Session ID not stored in cookie."];
 			}
 			break;
 		case 'session.use_only_cookies':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "Session ID not limited to cookie.");
+				[$result, $reason] = [TEST_HIGH, "Session ID not limited to cookie."];
 			}
 			break;
 		case 'session.name':
 			if ($v == "PHPSESSID") {
-				list($result, $reason) = array(TEST_COMMENT, "default session name.");
+				[$result, $reason] = [TEST_COMMENT, "default session name."];
 			}
 			break;
 		case 'session.use_trans_sid':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "transparent SID active.");
+				[$result, $reason] = [TEST_HIGH, "transparent SID active."];
 			}
 			break;
 		case 'always_populate_raw_post_data':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_COMMENT, "HTTP_RAW_POST_DATA is available.");
+				[$result, $reason] = [TEST_COMMENT, "HTTP_RAW_POST_DATA is available."];
 			}
 			break;
 		case 'arg_separator.input':
 		case 'arg_separator.output':
 			if ($v !== "&") {
-				list($result, $reason) = array(TEST_MAYBE, "unusual arg separator.");
+				[$result, $reason] = [TEST_MAYBE, "unusual arg separator."];
 				$recommendation = $helptext['arg_separator'];
 			}
 			break;
 		case 'assert.active':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
+				[$result, $reason] = [TEST_MEDIUM, "assert is active."];
 			}
 			break;
 		case 'assert.callback':
 			if (ini_get('assert.active') && $v !== "" && $v !== null) {
-				list($result, $reason) = array(TEST_MEDIUM, "assert callback set.");
+				[$result, $reason] = [TEST_MEDIUM, "assert callback set."];
 			}
 			break;
 		case 'zend.assertions':
 			if (intval($v) > 0) {
-				list($result, $reason) = array(TEST_MEDIUM, "assert is active.");
+				[$result, $reason] = [TEST_MEDIUM, "assert is active."];
 			}
 			break;
 		case 'auto_append_file':
 		case 'auto_prepend_file':
 			if ($v !== NULL && $v !== "") {
-				list($result, $reason) = array(TEST_MAYBE, "$k is set.");
+				[$result, $reason] = [TEST_MAYBE, "$k is set."];
 				$recommendation = $helptext['auto_append_file'];
 			}
 			break;
 		case 'cli.pager':
 			if ($v !== NULL && $v !== "") {
-				list($result, $reason) = array(TEST_MAYBE, "CLI pager set.");
+				[$result, $reason] = [TEST_MAYBE, "CLI pager set."];
 			}
 			break;
 		case 'cli.prompt':
 			if ($v !== NULL && strlen($v) > 32) {
-				list($result, $reason) = array(TEST_MAYBE, "CLI prompt is rather long (>32).");
+				[$result, $reason] = [TEST_MAYBE, "CLI prompt is rather long (>32)."];
 			}
 			break;
 		case 'curl.cainfo':
 			if ($v !== "") {
 				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $cfg['is_win'] && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
-					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO must be an absolute path.");
+					[$result, $reason] = [TEST_LOW, "CURLOPT_CAINFO must be an absolute path."];
 				} elseif (!is_readable($v)) {
-					list($result, $reason) = array(TEST_LOW, "CURLOPT_CAINFO is set but not readable.");
+					[$result, $reason] = [TEST_LOW, "CURLOPT_CAINFO is set but not readable."];
 				}
 
 			}
@@ -634,82 +636,82 @@ function test_all_ini_entries()
 		case 'docref_root':
 		case 'docref_ext':
 			if ($v !== NULL && $v !== "") {
-				list($result, $reason) = array(TEST_LOW, "docref is set.");
+				[$result, $reason] = [TEST_LOW, "docref is set."];
 				$recommendation = $helptext['docref_*'];
 			}
 			break;
 		case 'default_charset':
 			if ($v == "") {
-				list($result, $reason) = array(TEST_HIGH, "default charset not explicitly set.");
+				[$result, $reason] = [TEST_HIGH, "default charset not explicitly set."];
 				$recommendation = $helptext['default_charset=empty'];
 			} elseif (stripos($v, "iso-8859") === 0) {
-				list($result, $reason) = array(TEST_MAYBE, "charset without multibyte support.");
+				[$result, $reason] = [TEST_MAYBE, "charset without multibyte support."];
 				$recommendation = $helptext['default_charset=iso-8859'];
 			} elseif (strtolower($v) == "utf8") {
-				list($result, $reason) = array(TEST_HIGH, "'UTF-8' misspelled (without dash).");
+				[$result, $reason] = [TEST_HIGH, "'UTF-8' misspelled (without dash)."];
 				$recommendation = $helptext['default_charset=typo'];
 			} elseif (strtolower($v) == "utf-8") {
 				// ok.
 			} else {
-				list($result, $reason) = array(TEST_COMMENT, "custom charset.");
+				[$result, $reason] = [TEST_COMMENT, "custom charset."];
 				$recommendation = $helptext['default_charset=custom'];
 			}
 			break;
 		case 'default_mimetype':
 			if ($v == "") {
-				list($result, $reason) = array(TEST_HIGH, "default mimetype not set.");
+				[$result, $reason] = [TEST_HIGH, "default mimetype not set."];
 			}
 			break;
 		case 'default_socket_timeout':
 			if (intval($v) > 60) {
-				list($result, $reason) = array(TEST_LOW, "default socket timeout rather big.");
+				[$result, $reason] = [TEST_LOW, "default socket timeout rather big."];
 			}
 			break;
 		case 'doc_root':
 			if (!$cfg['is_cgi']) {
-				list($result, $reason) = array(TEST_SKIPPED, "no CGI environment.");
+				[$result, $reason] = [TEST_SKIPPED, "no CGI environment."];
 				break;
 			}
 			if (ini_get('cgi.force_redirect')) {
-				list($result, $reason) = array(TEST_SKIPPED, "cgi.force_redirect is on instead.");
+				[$result, $reason] = [TEST_SKIPPED, "cgi.force_redirect is on instead."];
 				break;
 			}
 			if ($v == "") {
-				list($result, $reason) = array(TEST_MEDIUM, "doc_root not set.");
+				[$result, $reason] = [TEST_MEDIUM, "doc_root not set."];
 				$recommendation = $helptext['doc_root=empty'];
 			}
 			break;
 		case 'error_prepend_string':
 		case 'error_append_string':
 			if ($v !== NULL && $v !== "") {
-				list($result, $reason) = array(TEST_MAYBE, "$k is set.");
+				[$result, $reason] = [TEST_MAYBE, "$k is set."];
 				$recommendation = $helptext['error_append_string'];
 			}
 			break;
 		case 'error_reporting':
 			if (error_reporting() == 0) {
-				list($result, $reason) = array(TEST_LOW, "error reporting is off.");
+				[$result, $reason] = [TEST_LOW, "error reporting is off."];
 			}
 			break;
 		case 'extension_dir':
 			if ($v !== NULL && $v !== "") {
 				if (realpath($v) === FALSE) {
-					list($result, $reason) = array(TEST_SKIPPED, "path is invalid or not accessible.");
+					[$result, $reason] = [TEST_SKIPPED, "path is invalid or not accessible."];
 				} elseif (is_writable($v) || is_writable_or_chmodable($v)) {
-					list($result, $reason) = array(TEST_HIGH, "path is writable or chmod-able.");
+					[$result, $reason] = [TEST_HIGH, "path is writable or chmod-able."];
 				}
 			}
 			break;
 		case 'exit_on_timeout':
 			if (!isset($_SERVER["SERVER_SOFTWARE"]) || strncmp($_SERVER["SERVER_SOFTWARE"], "Apache/1", strlen("Apache/1")) !== 0) {
-				list($result, $reason) = array(TEST_SKIPPED, "only relevant for Apache 1.");
+				[$result, $reason] = [TEST_SKIPPED, "only relevant for Apache 1."];
 			} elseif (!is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "not enabled.");
+				[$result, $reason] = [TEST_LOW, "not enabled."];
 			}
 			break;
 		case 'filter.default':
 			if ($v !== "unsafe_raw") {
-				list($result, $reason) = array(TEST_MAYBE, "global input filter is set.");
+				[$result, $reason] = [TEST_MAYBE, "global input filter is set."];
 			}
 			break;
 		case 'highlight.bg':
@@ -719,7 +721,7 @@ function test_all_ini_entries()
 		case 'highlight.keyword':
 		case 'highlight.string':
 			if (extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v) || strlen($v) > 7 || strpos($v, '"') !== FALSE) {
-				list($result, $reason) = array(TEST_MEDIUM, "suspicious color value.");
+				[$result, $reason] = [TEST_MEDIUM, "suspicious color value."];
 				$recommendation = $helptext['highlight.*'];
 			}
 			break;
@@ -728,85 +730,85 @@ function test_all_ini_entries()
 		case 'iconv.output_encoding':
 			if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6) {
 				if ($v !== "") {
-					list($result, $reason) = array(TEST_COMMENT, "not empty.");
+					[$result, $reason] = [TEST_COMMENT, "not empty."];
 					$recommendation = $helptext['iconv.internal_encoding!=empty'];
 				}
 			} else {
-				list($result, $reason) = array(TEST_SKIPPED, "not PHP >=5.6");
+				[$result, $reason] = [TEST_SKIPPED, "not PHP >=5.6"];
 			}
 			break;
 		case 'asp_tags':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "ASP-style tags enabled.");
+				[$result, $reason] = [TEST_MAYBE, "ASP-style tags enabled."];
 			}
 			break;
 		case 'ldap.max_links':
 			if (intval($v) == -1) {
-				list($result, $reason) = array(TEST_MAYBE, "Number of LDAP connections not limited.");
+				[$result, $reason] = [TEST_MAYBE, "Number of LDAP connections not limited."];
 			} else if (intval($v) > 5) {
-				list($result, $reason) = array(TEST_MAYBE, "More than 5 LDAP connections allowed.");
+				[$result, $reason] = [TEST_MAYBE, "More than 5 LDAP connections allowed."];
 			}
 			break;
 		case 'log_errors_max_len':
 			$v = ini_atol($v);
 			if ($v == 0 || $v > 4096) {
-				list($result, $reason) = array(TEST_MEDIUM, "Value rather big or not limited.");
+				[$result, $reason] = [TEST_MEDIUM, "Value rather big or not limited."];
 			}
 			break;
 		case 'mail.add_x_header':
 			if ($v) {
-				list($result, $reason) = array(TEST_MEDIUM, "Filename exposed.");
+				[$result, $reason] = [TEST_MEDIUM, "Filename exposed."];
 			}
 			break;
 		case 'mail.force_extra_parameters':
 			if ($v) {
-				list($result, $reason) = array(TEST_COMMENT, "not empty.");
+				[$result, $reason] = [TEST_COMMENT, "not empty."];
 				$recommendation = "just FYI.";
 			}
 			break;
 		case 'intl.default_locale':
 			if ($v == "")  {
-				list($result, $reason) = array(TEST_COMMENT, "ICU default locale not set.");
+				[$result, $reason] = [TEST_COMMENT, "ICU default locale not set."];
 			}
 			break;
 		case 'intl.error_level':
 			if (intval($v) & E_ERROR) {
-				list($result, $reason) = array(TEST_MAYBE, "ICU functions fail with error.");
+				[$result, $reason] = [TEST_MAYBE, "ICU functions fail with error."];
 			}
 			break;
 		case 'intl.use_exceptions':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_MAYBE, "intl functions throw exceptions.");
+				[$result, $reason] = [TEST_MAYBE, "intl functions throw exceptions."];
 			}
 			break;
 		case 'last_modified':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "is set.");
+				[$result, $reason] = [TEST_LOW, "is set."];
 			}
 			break;
 		case 'zend.multibyte':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_HIGH, "Multibyte encodings are active.");
+				[$result, $reason] = [TEST_HIGH, "Multibyte encodings are active."];
 			}
 			break;
 		case 'runkit.internal_override':
 			if (is_on($v)) {
-				list($result, $reason) = array(TEST_CRITICAL, "Internal functions override is enabled");
+				[$result, $reason] = [TEST_CRITICAL, "Internal functions override is enabled"];
 			}
 			break;
 		case 'phar.readonly':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "Phar files aren't readonly.");
+				[$result, $reason] = [TEST_LOW, "Phar files aren't readonly."];
 			}
 			break;
 		case 'phar.require_hash':
 			if (!is_on($v)) {
-				list($result, $reason) = array(TEST_LOW, "Signature check for phar is disabled.");
+				[$result, $reason] = [TEST_LOW, "Signature check for phar is disabled."];
 			}
 			break;
 		case 'ffi.enable':
 			if (is_on($v)){
-				list($result, $reason) = array(TEST_HIGH, "FFI is enabled.");
+				[$result, $reason] = [TEST_HIGH, "FFI is enabled."];
 			}
 
 		/* ===== known, but extra check below. ===== */
@@ -855,12 +857,12 @@ function test_all_ini_entries()
 		case 'session.cache_limiter':
 		case 'short_open_tag':
 		case 'track_errors':
-			list($result, $reason) = array(TEST_OK, "any value is ok");
+			[$result, $reason] = [TEST_OK, "any value is ok"];
 			break;
 
 		/* ===== unknown / ignored ===== */
 		default:
-			list($result, $reason) = array(TEST_UNKNOWN, "unknown / not checked.");
+			[$result, $reason] = [TEST_UNKNOWN, "unknown / not checked."];
 		}
 
 		if ($ignore) { continue; }
@@ -898,14 +900,14 @@ test_pcc_need_update();
 function test_old_php_version()
 {
 	$meta = tdesc("PHP Version", "Checks whether your PHP version is unsupported");
-	if (version_compare(PHP_VERSION, '7.3') >= 0) {
+	if (version_compare(PHP_VERSION, '8.0') >= 0) {
 		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-	} elseif (version_compare(PHP_VERSION, '7.1') >= 0) {
-		tres($meta, TEST_HIGH, "PHP version is older than 7.3",
-			"PHP 7.0 and 7.1 reached end of life in 2019 and 7.2 a year later. " .
+	} elseif (version_compare(PHP_VERSION, '7.4') >= 0) {
+		tres($meta, TEST_HIGH, "PHP version is older than 8.0",
+			"PHP 7 is no longer officially maintained. PHP 7.4 support ended in Nov. 2022." .
 			"While your PHP version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
 	} else {
-		tres($meta, TEST_CRITICAL, "PHP version is older than 7.1",
+		tres($meta, TEST_CRITICAL, "PHP version is older than 7.4",
 			"Please upgrade PHP as soon as possible. " .
 			"Old versions of PHP are not maintained anymore and may contain security flaws.");
 	}
@@ -1095,7 +1097,7 @@ test_vld();
 if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
 		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
-			return "\033[${color}m$result\033[0m";
+			return "\033[{$color}m$result\033[0m";
 		}
 		return $result;
 	}
