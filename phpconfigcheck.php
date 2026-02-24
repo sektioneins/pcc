@@ -305,6 +305,16 @@ function test_all_ini_entries()
 		'session.sid_length' => "Short session IDs increase the risk of session hijacking via brute-force. Set session.sid_length to at least 32 (the default). Higher values like 48 or 64 provide even better protection.",
 		'session.sid_bits_per_character' => "Set session.sid_bits_per_character to at least 5 (or 6) for better entropy density per character in session IDs.",
 		'serialize_precision' => "Setting serialize_precision=-1 is recommended for PHP 8.x to avoid floating-point precision issues with json_encode() and serialize(). This ensures numbers are encoded with full precision without spurious extra digits.",
+		'session.serialize_handler' => "The 'php' serialize handler is vulnerable to injection when session keys contain the pipe character. Use 'php_serialize' instead.",
+		'session.gc_maxlifetime' => "Long session lifetimes increase the window for session hijacking. Consider reducing session.gc_maxlifetime.",
+		'unserialize_max_depth' => "Setting unserialize_max_depth to 0 disables depth checking, making your application vulnerable to deserialization bombs. The default value of 4096 is recommended.",
+		'zend.exception_ignore_args' => "In production, set zend.exception_ignore_args=1 to prevent stack traces from exposing sensitive function arguments such as passwords, tokens, or database queries.",
+		'zend.exception_string_param_max_len' => "Set zend.exception_string_param_max_len=0 in production to prevent stack traces from showing string parameter values.",
+		'sqlite3.defensive' => "SQLite3 defensive mode prevents certain dangerous operations. Enable it to prevent abuse via user-supplied SQL queries.",
+		'sqlite3.extension_dir' => "An attacker may try to place a malicious SQLite3 extension in this directory. It should not be writable.",
+		'max_multipart_body_parts' => "An unlimited number of multipart body parts can be exploited for denial-of-service attacks. Set max_multipart_body_parts to a reasonable value, e.g. 1000.",
+		'openssl.cafile' => "If openssl.cafile is configured but the path does not exist, TLS certificate verification may silently fail, exposing connections to man-in-the-middle attacks.",
+		'openssl.capath' => "If openssl.capath is configured but the path does not exist, TLS certificate verification may silently fail, exposing connections to man-in-the-middle attacks.",
 		'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
 		'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
 		'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
@@ -351,6 +361,13 @@ function test_all_ini_entries()
 		$recommendation = NULL;
 		if (isset($helptext[$k])) { $recommendation = $helptext[$k]; }
 		$ignore = 0;
+
+		// opcache directives are performance-related, not security-relevant
+		if (str_starts_with($k, 'opcache.')) {
+			[$result, $reason] = [TEST_OK, "any value is ok"];
+			tres($meta, $result, $reason);
+			continue;
+		}
 
 		switch ($k) {
 		case 'display_errors':
@@ -569,6 +586,16 @@ function test_all_ini_entries()
 				[$result, $reason] = [TEST_COMMENT, "Default value. Consider increasing to 5 or 6."];
 			}
 			break;
+		case 'session.serialize_handler':
+			if ($v === 'php') {
+				[$result, $reason] = [TEST_MEDIUM, "Legacy session serializer 'php' is in use."];
+			}
+			break;
+		case 'session.gc_maxlifetime':
+			if (intval($v) > 86400) {
+				[$result, $reason] = [TEST_COMMENT, "Session lifetime is over 24 hours."];
+			}
+			break;
 		case 'serialize_precision':
 			if ($v !== "-1" && intval($v) != -1) {
 				[$result, $reason] = [TEST_COMMENT, "serialize_precision is not -1."];
@@ -594,6 +621,16 @@ function test_all_ini_entries()
 		case 'zend.assertions':
 			if (intval($v) > 0) {
 				[$result, $reason] = [TEST_MEDIUM, "assert is active."];
+			}
+			break;
+		case 'zend.exception_ignore_args':
+			if (!is_on($v)) {
+				[$result, $reason] = [TEST_MAYBE, "Stack traces may include function arguments."];
+			}
+			break;
+		case 'zend.exception_string_param_max_len':
+			if (intval($v) > 0) {
+				[$result, $reason] = [TEST_COMMENT, "String parameters visible in stack traces."];
 			}
 			break;
 		case 'auto_append_file':
@@ -626,6 +663,16 @@ function test_all_ini_entries()
 					[$result, $reason] = [TEST_LOW, "CURLOPT_CAINFO is set but not readable."];
 				}
 
+			}
+			break;
+		case 'openssl.cafile':
+			if (strlen($v) > 0 && !file_exists($v)) {
+				[$result, $reason] = [TEST_MEDIUM, "OpenSSL CA file does not exist: $v"];
+			}
+			break;
+		case 'openssl.capath':
+			if (strlen($v) > 0 && !is_dir($v)) {
+				[$result, $reason] = [TEST_MEDIUM, "OpenSSL CA path does not exist: $v"];
 			}
 			break;
 		case 'docref_root':
@@ -796,11 +843,61 @@ function test_all_ini_entries()
 			if (is_on($v)){
 				[$result, $reason] = [TEST_HIGH, "FFI is enabled."];
 			}
+			break;
+		case 'sqlite3.defensive':
+			if (!is_on($v)) {
+				[$result, $reason] = [TEST_MEDIUM, "SQLite3 defensive mode is disabled."];
+			}
+			break;
+		case 'sqlite3.extension_dir':
+			if (strlen($v) > 0 && is_writable_or_chmodable($v)) {
+				[$result, $reason] = [TEST_MEDIUM, "SQLite3 extension directory is writable."];
+			}
+			break;
+		case 'unserialize_max_depth':
+			if (intval($v) === 0) {
+				[$result, $reason] = [TEST_MEDIUM, "Deserialization depth limit is disabled."];
+			}
+			break;
+		case 'max_multipart_body_parts':
+			if (intval($v) < 0) {
+				[$result, $reason] = [TEST_MEDIUM, "No limit on multipart body parts."];
+			}
+			break;
+		case 'pcre.backtrack_limit':
+			if (intval($v) === 0) {
+				[$result, $reason] = [TEST_COMMENT, "PCRE backtrack limit is unlimited."];
+				$recommendation = "Unlimited backtracking can lead to ReDoS. The default value of 1000000 is recommended.";
+			}
+			break;
+		case 'pcre.recursion_limit':
+			if (intval($v) === 0) {
+				[$result, $reason] = [TEST_COMMENT, "PCRE recursion limit is unlimited."];
+				$recommendation = "Unlimited recursion can cause stack exhaustion. The default value of 100000 is recommended.";
+			}
+			break;
+		case 'error_log_mode':
+			$mode = intval($v, 8);
+			if ($mode & 0002) {
+				[$result, $reason] = [TEST_LOW, "Error log is world-writable (mode $v)."];
+				$recommendation = "Error logs may contain sensitive information. Set error_log_mode to 0600 or 0640.";
+			} elseif ($mode & 0004) {
+				[$result, $reason] = [TEST_COMMENT, "Error log is world-readable (mode $v)."];
+				$recommendation = "Error logs may contain sensitive information. Consider restricting with error_log_mode=0600.";
+			}
+			break;
+		case 'register_argc_argv':
+			if (is_on($v) && !$cfg['is_cli']) {
+				[$result, $reason] = [TEST_COMMENT, "register_argc_argv is enabled in web mode."];
+				$recommendation = "In web mode, this creates \$argc/\$argv from the query string, which is unnecessary and wasteful.";
+			}
+			break;
 
 		/* ===== known, but extra check below. ===== */
 		case 'error_log':
 		case 'include_path':
 		case 'mail.log':
+		case 'sendmail_path':
 		case 'upload_tmp_dir':
 			// silently ignore this option
 			$ignore = 1;
@@ -828,19 +925,76 @@ function test_all_ini_entries()
 		case 'exif.decode_unicode_motorola':
 		case 'exif.encode_jis':
 		case 'exif.encode_unicode':
+		case 'fatal_error_backtraces':
+		case 'fiber.stack_size':
 		case 'filter.default_flags':
 		case 'from':
 		case 'gd.jpeg_ignore_warning':
+		case 'hard_timeout':
 		case 'html_errors':
 		case 'ignore_repeated_errors':
 		case 'ignore_repeated_source':
 		case 'ignore_user_abort':
 		case 'implicit_flush':
+		case 'input_encoding':
+		case 'internal_encoding':
+		case 'mail.cr_lf_mode':
+		case 'mail.mixed_lf_and_crlf':
+		case 'max_memory_limit':
+		case 'openssl.libctx':
+		case 'output_buffering':
+		case 'output_encoding':
+		case 'output_handler':
+		case 'pcre.jit':
+		case 'phar.cache_list':
+		case 'realpath_cache_size':
+		case 'realpath_cache_ttl':
 		case 'report_memleaks': // may be relevant, but only active in debug builds anyway
+		case 'report_zend_debug':
+		case 'sendmail_from':
 		case 'session.auto_start':
 		case 'session.cache_expire':
 		case 'session.cache_limiter':
+		case 'session.cookie_domain':
+		case 'session.cookie_partitioned':
+		case 'session.cookie_path':
+		case 'session.gc_divisor':
+		case 'session.gc_probability':
+		case 'session.lazy_write':
+		case 'session.save_handler':
+		case 'session.trans_sid_hosts':
+		case 'session.trans_sid_tags':
+		case 'session.upload_progress.cleanup':
+		case 'session.upload_progress.enabled':
+		case 'session.upload_progress.freq':
+		case 'session.upload_progress.min_freq':
+		case 'session.upload_progress.name':
+		case 'session.upload_progress.prefix':
 		case 'short_open_tag':
+		case 'SMTP':
+		case 'smtp_port':
+		case 'sys_temp_dir':
+		case 'syslog.facility':
+		case 'syslog.filter':
+		case 'syslog.ident':
+		case 'unserialize_callback_func':
+		case 'url_rewriter.hosts':
+		case 'url_rewriter.tags':
+		case 'user_agent':
+		case 'user_dir':
+		case 'user_ini.cache_ttl':
+		case 'user_ini.filename':
+		case 'xmlrpc_error_number':
+		case 'xmlrpc_errors':
+		case 'zend.detect_unicode':
+		case 'zend.enable_gc':
+		case 'zend.max_allowed_stack_size':
+		case 'zend.reserved_stack_size':
+		case 'zend.script_encoding':
+		case 'zend.signal_check':
+		case 'zlib.output_compression':
+		case 'zlib.output_compression_level':
+		case 'zlib.output_handler':
 			[$result, $reason] = [TEST_OK, "any value is ok"];
 			break;
 
