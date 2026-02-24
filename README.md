@@ -17,7 +17,7 @@ Idea
 * one single file for easy distribution
 * simple tests for each security related ini entry
 * a few other tests - not too complicated though
-* compatible with PHP >= 5.4, or if possible >= 5.0
+* compatible with PHP >= 8.1
 * NO complicated/overengineered code, e.g. no classes/interfaces, test-frameworks, libraries, ... -> It is supposed to be obvious on first glance - even for novices - how this tool works and what it does!
 * NO (or very few) dependencies
 

@@ -11,7 +11,7 @@
     * one single file for easy distribution
     * simple tests for each security related ini entry
     * a few other tests - not too complicated though
-    * compatible with PHP >= 7.x
+    * compatible with PHP >= 8.1
     * NO complicated/overengineered code, e.g. no classes/interfaces,
       test-frameworks, libraries, ...
         -> It is supposed to be obvious on first glance - even for novices -
@@ -52,13 +52,13 @@
 /*****************************************************************************/
 
 $pcc_name = "PHP Secure Configuration Checker";
-$pcc_version = "0.2.0";
-$pcc_copy = "(c) 2015-2023 SektionEins GmbH / Ben Fuhrmannek";
-$pcc_date = "2023-04-04"; // release date for update check
+$pcc_version = "0.3.0";
+$pcc_copy = "(c) 2014-2026 SektionEins GmbH / Ben Fuhrmannek";
+$pcc_date = "2026-02-24"; // release date for update check
 $pcc_url = "https://github.com/sektioneins/pcc"; // download URL
 
 /*****************************************************************************/
-PHP_VERSION_ID >= 70100 || die("This version of PCC requires at least PHP 7.1. Please update PHP or check out an older version of PCC -> $pcc_url\n");
+PHP_VERSION_ID >= 80100 || die("This version of PCC requires at least PHP 8.1. Please update PHP or check out an older version of PCC -> $pcc_url\n");
 
 /*****************************************************************************/
 
@@ -222,8 +222,8 @@ function ini_atol($val)
 	$ret = intval($val);
 	$val = strtolower((string)$val);
 	switch (substr($val, -1)) {
-		case 'g': $ret *= 1024;
-		case 'm': $ret *= 1024;
+		case 'g': $ret *= 1024; // fall through
+		case 'm': $ret *= 1024; // fall through
 		case 'k': $ret *= 1024;
 	}
 	return $ret;
@@ -250,8 +250,8 @@ function is_writable_or_chmodable($fn)
 	$mygids = posix_getgroups();
 	if ($myuid == 0 ||
 			$myuid == $stat['uid'] ||
-			in_array($stat['gid'], $mygids) && $stat['mode'] & 0020 ||
-			$stat['mode'] & 0002) {
+			(in_array($stat['gid'], $mygids) && ($stat['mode'] & 0020)) ||
+			($stat['mode'] & 0002)) {
 		return true;
 	}
 	return false;
@@ -282,14 +282,12 @@ function test_all_ini_entries()
 		'max_file_uploads' => "This value should match the maximum number of simultaneous file uploads. (lower is better)",
 		'allow_url_fopen' => "Deactivate, if possible. Allowing URLs in fopen() can be a suprising side-effect for unexperienced developers. Even if deactivated, it is still possible to receive content from URLs, e.g. with curl.",
 		'allow_url_include' => "This flag should remain deactivated for security reasons.",
-		'magic_quotes' => "This option should be deactivated. Instead, user input should be escaped properly and handled in a secure way when building database queries. The use of magic quotes or similar behaviour is highly discouraged. Current PHP versions do not support this feature anymore.",
 		'enable_dl' => "Deactivate this option to prevent arbitrary code to be loaded during runtime (see dl()).",
 		'disable_functions' => "Potentially dangerous and unused functions should be deactivated, e.g. system().",
 		'disable_classes' => "Potentially dangerous and unused classes should be deactivated.",
 		'request_order' => "It is recommended to use GP to register GET and POST with REQUEST.",
 		'variables_order' => "Changing this setting is usually not necessary; however, the ENV variables are rarely used.",
 		'auto_globals_jit' => "Unless access to these variables is done through variable variables this option can remain activated.",
-		'register_globals' => "This relic from the past is not available in current PHP versions. If it is there anyway, keep it deactivated! Please.",
 		'file_uploads' => "If an application does not require HTTP file uploads, this setting should be deactivated.",
 		'filter.default' => "This should only be set if the application is specifically designed to handle filtered values. Usually it is considered bad practice to filter all user input in one place. Instead, each user input should be validated and then escaped/encoded according to its context.",
 		'open_basedir' => "Usually it is a good idea to restrict file system access to directories related to the application, e.g. the document root.",
@@ -304,7 +302,9 @@ function test_all_ini_entries()
 		'session.use_only_cookies' => "PHP will send the session ID only via cookie to the client, not e.g. in the URL. Please activate.",
 		'session.name' => "Your session name is boring. Why not change it to something more suitable for your application?",
 		'session.use_trans_sid' => "Allowing the user to choose to store the session ID within the URL makes session hijacking a realistic security risk. URLs are logged in logfiles and can easily be copied by the user or by scripts. This option must be disabled.",
-		'always_populate_raw_post_data' => "In a shared hosting environment it should not be the default to let the unexperienced user parse raw POST data themselves. Otherwise, this option should only be used, if accessing the raw POST data is actually required.",
+		'session.sid_length' => "Short session IDs increase the risk of session hijacking via brute-force. Set session.sid_length to at least 32 (the default). Higher values like 48 or 64 provide even better protection.",
+		'session.sid_bits_per_character' => "Set session.sid_bits_per_character to at least 5 (or 6) for better entropy density per character in session IDs.",
+		'serialize_precision' => "Setting serialize_precision=-1 is recommended for PHP 8.x to avoid floating-point precision issues with json_encode() and serialize(). This ensures numbers are encoded with full precision without spurious extra digits.",
 		'arg_separator' => "The usual argument separator for parsing a query string is '&'. Standard libraries handling URLs will possibly not be compatible with custom separators, which may lead to unexpected behaviour. Also, additional parsers - such as a WAF or logfile analyzers - have to be configured accordingly.",
 		'assert.active' => "assert() evaluates code just like eval(). Unless it is actually required in a live environment, which is almost certainly not the case, this feature should be deactivated.",
 		'assert.callback' => "Failed assertions call a user function. This can be useful for test environments, but most certainly should not be used in production. An attacker may try to override this value to call a different function. If possible, deactivate assert altogether.",
@@ -328,7 +328,6 @@ function test_all_ini_entries()
 		'filter.default' => "Using a default filter or sanitizer for all PHP input is generally not considered good practice. Instead, each input should be handled by the application individually, e.g. validated, sanitized, filtered, then escaped or encoded. The default value is 'unsafe_raw'.",
 		'highlight.*' => "Your color value is suspicious. An attacker may have managed to inject something here. Please check manually.",
 		'iconv.internal_encoding!=empty' => "Starting with PHP 5.6 this value is derived from 'default_charset' and can safely be left empty.",
-		'asp_tags' => "ASP-Style tags are quite uncommon for PHP. If you don't actually require your PHP-code to start with <%, this option should be deactivated.",
 		'ldap.max_links' => "In order to prevent denial-of-service attacks this option should be set to the lowest number possible. If LDAP is not needed at all, the LDAP extension should not be loaded in the first place.",
 		'log_errors_max_len' => "An attacker may try to exhaust ressources such as disk space and RAM. If possible, limit this value to a reasonable minimum, e.g. 1024.",
 		'mail.add_x_header' => "Information Disclosure: When sending e-mails, a header 'X-PHP-Originating-Script' contains the filename of the originating script. In production this feature should be disabled.",
@@ -405,7 +404,7 @@ function test_all_ini_entries()
 			$v = ini_atol($v);
 			if ($v < 0) {
 				[$result, $reason] = [TEST_HIGH, "Memory limit deactivated."];
-			} elseif (ini_atol($v) >= 128*1024*1024) { // default value
+			} elseif ($v >= 128*1024*1024) { // default value
 				[$result, $reason] = [TEST_MAYBE, "Memory limit is 128M or more."];
 			}
 			break;
@@ -445,24 +444,6 @@ function test_all_ini_entries()
 				[$result, $reason] = [TEST_HIGH, "include/require() can include URLs."];
 			}
 			break;
-		case 'magic_quotes_gpc':
-			if (PHP_MAJOR_VERSION < 8 && get_magic_quotes_gpc()) {
-				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
-				$recommendation = $helptext['magic_quotes'];
-			}
-			break;
-		case 'magic_quotes_runtime':
-			if (PHP_MAJOR_VERSION < 8 && get_magic_quotes_runtime()) {
-				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
-				$recommendation = $helptext['magic_quotes'];
-			}
-			break;
-		case 'magic_quotes_sybase':
-			if (is_on($v)) {
-				[$result, $reason] = [TEST_HIGH, "magic quotes activated."];
-				$recommendation = $helptext['magic_quotes'];
-			}
-			break;
 		case 'enable_dl':
 			if (is_on($v)) {
 				[$result, $reason] = [TEST_HIGH, "PHP can load extensions during runtime."];
@@ -484,10 +465,10 @@ function test_all_ini_entries()
 			if ($v === null || $v === "") { $v = ini_get("variables_order"); }
 			$v = strtoupper((string)$v);
 			if ($v === "GP") {break;} // ok
-			if (strstr($v, 'C') !== FALSE) {
+			if (str_contains($v, 'C')) {
 				[$result, $reason] = [TEST_MAYBE, "cookie values in \$_REQUEST."];
 			}
-			if (strstr(str_replace('C', $v, ''), 'PG') !== FALSE) {
+			if (str_contains(str_replace('C', '', $v), 'PG')) {
 				[$result, $reason] = [TEST_LOW, "GET overrides POST in \$_REQUEST."];
 			}
 			break;
@@ -501,11 +482,6 @@ function test_all_ini_entries()
 			break;
 		case 'auto_globals_jit':
 			$result = TEST_OK;
-			break;
-		case 'register_globals':
-			if ($v !== "" && $v !== "0") {
-				[$result, $reason] = [TEST_CRITICAL, "register_globals is on."];
-			}
 			break;
 		case 'file_uploads':
 			if ($v == "1") {
@@ -579,9 +555,23 @@ function test_all_ini_entries()
 				[$result, $reason] = [TEST_HIGH, "transparent SID active."];
 			}
 			break;
-		case 'always_populate_raw_post_data':
-			if (is_on($v)) {
-				[$result, $reason] = [TEST_COMMENT, "HTTP_RAW_POST_DATA is available."];
+		case 'session.sid_length':
+			if (intval($v) < 32) {
+				[$result, $reason] = [TEST_HIGH, "Session ID length is too short (< 32)."];
+			} elseif (intval($v) < 48) {
+				[$result, $reason] = [TEST_COMMENT, "Session ID length could be increased."];
+			}
+			break;
+		case 'session.sid_bits_per_character':
+			if (intval($v) < 4) {
+				[$result, $reason] = [TEST_MEDIUM, "Session ID bits per character too low (< 4)."];
+			} elseif (intval($v) == 4) {
+				[$result, $reason] = [TEST_COMMENT, "Default value. Consider increasing to 5 or 6."];
+			}
+			break;
+		case 'serialize_precision':
+			if ($v !== "-1" && intval($v) != -1) {
+				[$result, $reason] = [TEST_COMMENT, "serialize_precision is not -1."];
 			}
 			break;
 		case 'arg_separator.input':
@@ -625,7 +615,12 @@ function test_all_ini_entries()
 			break;
 		case 'curl.cainfo':
 			if ($v !== "") {
-				if (substr($v, 0, 1) !== DIRECTORY_SEPARATOR || $cfg['is_win'] && substr($v, 1, 2) !== ":" . DIRECTORY_SEPARATOR) {
+				if ($cfg['is_win']) {
+					$is_absolute = (strlen($v) >= 3 && substr($v, 1, 2) === ":" . DIRECTORY_SEPARATOR);
+				} else {
+					$is_absolute = (substr($v, 0, 1) === DIRECTORY_SEPARATOR);
+				}
+				if (!$is_absolute) {
 					[$result, $reason] = [TEST_LOW, "CURLOPT_CAINFO must be an absolute path."];
 				} elseif (!is_readable($v)) {
 					[$result, $reason] = [TEST_LOW, "CURLOPT_CAINFO is set but not readable."];
@@ -720,7 +715,7 @@ function test_all_ini_entries()
 		case 'highlight.html':
 		case 'highlight.keyword':
 		case 'highlight.string':
-			if (extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v) || strlen($v) > 7 || strpos($v, '"') !== FALSE) {
+			if ((extension_loaded('pcre') && preg_match('/[^#a-z0-9]/i', $v)) || strlen($v) > 7 || str_contains($v, '"')) {
 				[$result, $reason] = [TEST_MEDIUM, "suspicious color value."];
 				$recommendation = $helptext['highlight.*'];
 			}
@@ -728,18 +723,9 @@ function test_all_ini_entries()
 		case 'iconv.internal_encoding':
 		case 'iconv.input_encoding':
 		case 'iconv.output_encoding':
-			if (PHP_MAJOR_VERSION > 5 || PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6) {
-				if ($v !== "") {
-					[$result, $reason] = [TEST_COMMENT, "not empty."];
-					$recommendation = $helptext['iconv.internal_encoding!=empty'];
-				}
-			} else {
-				[$result, $reason] = [TEST_SKIPPED, "not PHP >=5.6"];
-			}
-			break;
-		case 'asp_tags':
-			if (is_on($v)) {
-				[$result, $reason] = [TEST_MAYBE, "ASP-style tags enabled."];
+			if ($v !== "") {
+				[$result, $reason] = [TEST_COMMENT, "not empty."];
+				$recommendation = $helptext['iconv.internal_encoding!=empty'];
 			}
 			break;
 		case 'ldap.max_links':
@@ -823,7 +809,6 @@ function test_all_ini_entries()
 		/* ===== known, but probably not security relevant ===== */
 		case 'precision':
 		case 'assert.bail':
-		case 'assert.quiet_eval':
 		case 'assert.warning':
 		case 'assert.exception':
 		case 'auto_detect_line_endings':
@@ -856,7 +841,6 @@ function test_all_ini_entries()
 		case 'session.cache_expire':
 		case 'session.cache_limiter':
 		case 'short_open_tag':
-		case 'track_errors':
 			[$result, $reason] = [TEST_OK, "any value is ok"];
 			break;
 
@@ -885,9 +869,7 @@ function test_pcc_need_update()
 {
 	global $cfg, $pcc_date, $pcc_version;
 
-	if (version_compare(PHP_VERSION, '5.1.0') >= 0) {
-		date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
-	}
+	date_default_timezone_set("UTC"); // avoid incorrect timezone warnings in strtotime()
 	if (stripos($pcc_version, "-dev") !== FALSE || stripos($pcc_version, "-rc") !== FALSE) {
 		if (time() > strtotime($pcc_date) + (24*3600*90)) { $cfg['need_update'] = 1; }
 	} elseif (time() > strtotime($pcc_date) + (24*3600*270)) { $cfg['need_update'] = 1; }
@@ -900,14 +882,17 @@ test_pcc_need_update();
 function test_old_php_version()
 {
 	$meta = tdesc("PHP Version", "Checks whether your PHP version is unsupported");
-	if (version_compare(PHP_VERSION, '8.0') >= 0) {
+	if (version_compare(PHP_VERSION, '8.3') >= 0) {
 		tres($meta, TEST_OK, "PHP version = " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION);
-	} elseif (version_compare(PHP_VERSION, '7.4') >= 0) {
-		tres($meta, TEST_HIGH, "PHP version is older than 8.0",
-			"PHP 7 is no longer officially maintained. PHP 7.4 support ended in Nov. 2022." .
-			"While your PHP version is not officially supported by the PHP group anymore, it may still be possible that some distributors maintain security backports. Please make sure your version receives security patches from other sources or upgrade PHP as soon as possible.");
+	} elseif (version_compare(PHP_VERSION, '8.2') >= 0) {
+		tres($meta, TEST_LOW, "PHP " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION . " is in security-only support",
+			"PHP 8.2 receives only security fixes. Consider upgrading to PHP 8.3 or 8.4 for full support.");
+	} elseif (version_compare(PHP_VERSION, '8.1') >= 0) {
+		tres($meta, TEST_HIGH, "PHP " . PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION . " is end-of-life",
+			"PHP 8.1 security support ended in December 2025. " .
+			"Please upgrade PHP as soon as possible.");
 	} else {
-		tres($meta, TEST_CRITICAL, "PHP version is older than 7.4",
+		tres($meta, TEST_CRITICAL, "PHP version is older than 8.1",
 			"Please upgrade PHP as soon as possible. " .
 			"Old versions of PHP are not maintained anymore and may contain security flaws.");
 	}
@@ -921,10 +906,6 @@ function test_snuffleupagus_installed()
 	$meta = tdesc("Snuffleupagus", "Checks whether the Snuffleupagus extension is loaded");
 	if (extension_loaded("snuffleupagus")) {
 		tres($meta, TEST_OK);
-	} else if (PHP_MAJOR_VERSION < 7) {
-		tres($meta, TEST_SKIPPED, "Snuffleupagus isn't available for PHP < 7");
-	} else if (defined('HHVM_VERSION')) {
-		tres($meta, TEST_SKIPPED, "Snuffleupagus is not available for HHVM.");
 	} else {
 		tres($meta, TEST_MAYBE, "The Snuffleupagus extension is not loaded", "Snuffleupagus is an advanced protection system for PHP7+. It is designed to protect servers and users from known and unknown flaws in PHP applications and the PHP core. For more information see https://snuffleupagus.rtfd.io");
 	}
@@ -987,7 +968,7 @@ function test_include_path_writable()
 	$meta = tdesc("Writable include_path", "Checks if at least one directory listed in the include_path is writable");
 	$result = 0;
 	$checked = 0;
-	foreach (explode(':', ini_get('include_path')) as $dir) {
+	foreach (explode(PATH_SEPARATOR, ini_get('include_path')) as $dir) {
 		if ($dir === "") { continue; }
 		$checked++;
 		$absdir = realpath($dir);
@@ -1036,7 +1017,7 @@ test_sendmail_writable();
 function test_debug_build()
 {
 	$meta = tdesc("Debug build", "Checks if PHP was built with --enable-debug");
-	if (constant('PHP_DEBUG') || constant('ZEND_DEBUG_BUILD')) {
+	if ((defined('PHP_DEBUG') && PHP_DEBUG) || (defined('ZEND_DEBUG_BUILD') && ZEND_DEBUG_BUILD)) {
 		tres($meta, TEST_MEDIUM, "debug build.", "Using a debug build of PHP makes it possible to enable debugging features in PHP, which can be useful for attackers, e.g. to get more accurate error messages or to simplify DoS attacks. Also, debugging may impact overall performance. This is probably not what you want in a production environment. Please recompile PHP without debugging.");
 	} else {
 		tres($meta, TEST_OK, "not a debug build.");
@@ -1096,7 +1077,8 @@ test_vld();
 
 if (function_exists('posix_isatty') && defined('STDOUT') && posix_isatty(STDOUT)) {
 	function colorize_result($result){
-		if (($color = constant("ANSI_COLOR_" . $result)) !== NULL) {
+		$const_name = "ANSI_COLOR_" . $result;
+		if (defined($const_name) && ($color = constant($const_name)) !== NULL) {
 			return "\033[{$color}m$result\033[0m";
 		}
 		return $result;
