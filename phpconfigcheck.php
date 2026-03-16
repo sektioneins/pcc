@@ -440,15 +440,21 @@ function test_all_ini_entries()
 			}
 			break;
 		case 'upload_max_filesize':
-			if ($v === "2M") {
-				[$result, $reason] = [TEST_COMMENT, "default value."];
-			} elseif (ini_atol($v) >= ini_atol("2G")) {
-				[$result, $reason] = [TEST_MAYBE, "value is rather high."];
+			$upload_enabled = ini_get('file_uploads');
+			if (is_on($upload_enabled)) {
+				if ($v === "2M") {
+					[$result, $reason] = [TEST_COMMENT, "default value."];
+				} elseif (ini_atol($v) >= ini_atol("2G")) {
+					[$result, $reason] = [TEST_MAYBE, "value is rather high."];
+				}
 			}
 			break;
 		case 'max_file_uploads':
-			if (intval($v) > 30) {
-				[$result, $reason] = [TEST_MAYBE, "value is rather high."];
+			$upload_enabled = ini_get('file_uploads');
+			if (is_on($upload_enabled)) {
+				if (intval($v) > 30) {
+					[$result, $reason] = [TEST_MAYBE, "value is rather high."];
+				}
 			}
 			break;
 		case 'allow_url_fopen':
